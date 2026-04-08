@@ -1,186 +1,152 @@
 import { useState, useEffect } from 'react';
-import { Modal, Form, Button } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import { BsPencil, BsTrash, BsPlus } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { studentService } from '@/services/student.service';
+import { Gender } from '@/types/enums';
+import { formatEnum } from '@/utils/formatters';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { DataTable } from '@/components/ui/DataTable';
-import type { Column } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import type { Column } from '@/components/ui/DataTable';
 import type { Student, CreateStudentRequest } from '@/types/academic.types';
+
+type ModalMode = 'create' | 'edit' | 'delete' | null;
 
 export default function StudentCRUD() {
   const [items, setItems] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editItem, setEditItem] = useState<Student | null>(null);
+  const [modal, setModal] = useState<ModalMode>(null);
+  const [selected, setSelected] = useState<Student | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [dob, setDob] = useState('');
-  const [gender, setGender] = useState('');
+  const [gender, setGender] = useState<Gender | ''>('');
   const [address, setAddress] = useState('');
 
-  const fetchData = async () => {
+  const load = async () => {
+    try { setLoading(true); setItems(await studentService.getAll()); }
+    catch { toast.error('Failed to load students'); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const openCreate = () => { setSelected(null); setName(''); setEmail(''); setPassword(''); setPhone(''); setDob(''); setGender(''); setAddress(''); setModal('create'); };
+  const openEdit = (item: Student) => { setSelected(item); setName(item.name); setEmail(item.email); setPassword(''); setPhone(item.phone); setDob(item.dob); setGender(item.gender as Gender); setAddress(item.address); setModal('edit'); };
+
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      setLoading(true);
-      setItems(await studentService.getAll());
-    } catch {
-      toast.error('Failed to load students');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const openCreate = () => {
-    setEditItem(null);
-    setName('');
-    setEmail('');
-    setPassword('');
-    setPhone('');
-    setDob('');
-    setGender('');
-    setAddress('');
-    setShowModal(true);
-  };
-
-  const openEdit = (item: Student) => {
-    setEditItem(item);
-    setName(item.name);
-    setEmail(item.email);
-    setPassword('');
-    setPhone(item.phone);
-    setDob(item.dob);
-    setGender(item.gender);
-    setAddress(item.address);
-    setShowModal(true);
-  };
-
-  const handleSubmit = async () => {
-    try {
-      if (editItem) {
-        await studentService.update(editItem.id, { name, email, phone, dob, gender, address });
+      if (modal === 'edit' && selected) {
+        await studentService.update(selected.id, { name, email, phone, dob, gender, address });
         toast.success('Student updated');
       } else {
         const payload: CreateStudentRequest = { name, email, password, phone, dob, gender, address };
         await studentService.create(payload);
         toast.success('Student created');
       }
-      setShowModal(false);
-      fetchData();
-    } catch {
-      toast.error('Failed to save student');
-    }
+      setModal(null); load();
+    } catch { toast.error('Failed to save student'); }
+    finally { setSaving(false); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure?')) return;
-    try {
-      await studentService.delete(id);
-      toast.success('Student deleted');
-      fetchData();
-    } catch {
-      toast.error('Failed to delete student');
-    }
+  const handleDelete = async () => {
+    if (!selected) return;
+    setSaving(true);
+    try { await studentService.delete(selected.id); toast.success('Student deleted'); setModal(null); load(); }
+    catch { toast.error('Failed to delete student'); }
+    finally { setSaving(false); }
   };
 
   const columns: Column<Student>[] = [
-    { key: 'name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Phone' },
-    { key: 'dob', label: 'Date of Birth' },
-    { key: 'gender', label: 'Gender' },
-    { key: 'address', label: 'Address' },
-    { key: 'enrollmentDate', label: 'Enrollment Date' },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item) => <StatusBadge status={item.status} />,
-    },
+    { key: 'name',           label: 'Name' },
+    { key: 'email',          label: 'Email' },
+    { key: 'phone',          label: 'Phone' },
+    { key: 'gender',         label: 'Gender' },
+    { key: 'enrollmentDate', label: 'Enrolled', render: item => item.enrollmentDate ? new Date(item.enrollmentDate).toLocaleDateString() : '—' },
+    { key: 'status',         label: 'Status', render: item => <StatusBadge status={item.status} /> },
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Students"
-        subtitle="Manage student records"
-        action={
-          <Button variant="primary" size="sm" onClick={openCreate}>
-            <BsPlus className="me-1" /> Add New
-          </Button>
-        }
+    <>
+      <PageHeader title="Students" subtitle="Manage student records"
+        action={<button className="btn btn-primary btn-sm" onClick={openCreate}><BsPlus className="me-1" />Add Student</button>}
       />
-
-      <DataTable
-        columns={columns}
-        data={items}
-        loading={loading}
-        actions={(item) => (
-          <div className="d-flex gap-1">
-            <Button variant="outline-primary" size="sm" onClick={() => openEdit(item)}>
-              <BsPencil />
-            </Button>
-            <Button variant="outline-danger" size="sm" onClick={() => handleDelete(item.id)}>
-              <BsTrash />
-            </Button>
+      <DataTable columns={columns} data={items} loading={loading}
+        actions={item => (
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
+            <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
           </div>
         )}
       />
 
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{editItem ? 'Edit Student' : 'Create Student'}</Modal.Title>
-        </Modal.Header>
+      <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)}>
+        <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Student' : 'Add Student'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Name</Form.Label>
-              <Form.Control value={name} onChange={(e) => setName(e.target.value)} />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
-              <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            </Form.Group>
-            {!editItem && (
-              <Form.Group className="mb-3">
-                <Form.Label>Password</Form.Label>
-                <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-              </Form.Group>
-            )}
-            <Form.Group className="mb-3">
-              <Form.Label>Phone</Form.Label>
-              <Form.Control value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Date of Birth</Form.Label>
-              <Form.Control type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Gender</Form.Label>
-              <Form.Select value={gender} onChange={(e) => setGender(e.target.value)}>
-                <option value="">Select Gender</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-                <option value="OTHER">Other</option>
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Address</Form.Label>
-              <Form.Control as="textarea" rows={2} value={address} onChange={(e) => setAddress(e.target.value)} />
-            </Form.Group>
-          </Form>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+            <div>
+              <label className="form-label">Full Name</label>
+              <input className="form-control" value={name} onChange={e => setName(e.target.value)} placeholder="Student name" />
+            </div>
+            <div>
+              <label className="form-label">Email</label>
+              <input type="email" className="form-control" value={email} onChange={e => setEmail(e.target.value)} />
+            </div>
+          </div>
+          {!selected && (
+            <div style={{ marginBottom: 14 }}>
+              <label className="form-label">Password</label>
+              <input type="password" className="form-control" value={password} onChange={e => setPassword(e.target.value)} placeholder="Initial password" />
+            </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+            <div>
+              <label className="form-label">Phone</label>
+              <input className="form-control" value={phone} onChange={e => setPhone(e.target.value)} />
+            </div>
+            <div>
+              <label className="form-label">Date of Birth</label>
+              <input type="date" className="form-control" value={dob} onChange={e => setDob(e.target.value)} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+            <div>
+              <label className="form-label">Gender</label>
+              <select className="form-select" value={gender} onChange={e => setGender(e.target.value as Gender)}>
+                <option value="">Select gender</option>
+                {Object.values(Gender).map(g => <option key={g} value={g}>{formatEnum(g)}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="form-label">Address</label>
+            <textarea className="form-control" rows={2} value={address} onChange={e => setAddress(e.target.value)} />
+          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit}>Save</Button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
+            {saving && <span className="spinner-border spinner-border-sm me-2" />}Save
+          </button>
         </Modal.Footer>
       </Modal>
-    </div>
+
+      <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
+        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
+          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete "{selected?.name}"?</p>
+          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+            <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
+          </div>
+        </Modal.Body>
+      </Modal>
+    </>
   );
 }

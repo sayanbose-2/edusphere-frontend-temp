@@ -7,18 +7,13 @@ export default function ChangePasswordPage() {
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (form.newPassword !== form.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
+    if (form.newPassword !== form.confirmPassword) { toast.error('Passwords do not match'); return; }
+    if (form.newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return; }
     setLoading(true);
     try {
-      await authService.changePassword({
-        currentPassword: form.currentPassword,
-        newPassword: form.newPassword,
-      });
+      await authService.changePassword({ currentPassword: form.currentPassword, newPassword: form.newPassword });
       toast.success('Password changed successfully');
       setForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err: unknown) {
@@ -30,28 +25,28 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <div>
-      <PageHeader title="Change Password" />
-      <div className="card p-4" style={{ maxWidth: 500 }}>
+    <>
+      <PageHeader title="Change Password" subtitle="Update your account password" />
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '28px 32px', maxWidth: 480, boxShadow: 'var(--shadow)' }}>
         <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label small fw-semibold">Current Password</label>
-            <input type="password" className="form-control" value={form.currentPassword} onChange={(e) => setForm(f => ({ ...f, currentPassword: e.target.value }))} required />
+          <div style={{ marginBottom: 16 }}>
+            <label className="form-label">Current Password</label>
+            <input type="password" className="form-control" value={form.currentPassword} onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))} required />
           </div>
-          <div className="mb-3">
-            <label className="form-label small fw-semibold">New Password</label>
-            <input type="password" className="form-control" value={form.newPassword} onChange={(e) => setForm(f => ({ ...f, newPassword: e.target.value }))} required />
+          <div style={{ marginBottom: 16 }}>
+            <label className="form-label">New Password</label>
+            <input type="password" minLength={8} className="form-control" value={form.newPassword} onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))} placeholder="Min. 8 characters" required />
           </div>
-          <div className="mb-4">
-            <label className="form-label small fw-semibold">Confirm New Password</label>
-            <input type="password" className="form-control" value={form.confirmPassword} onChange={(e) => setForm(f => ({ ...f, confirmPassword: e.target.value }))} required />
+          <div style={{ marginBottom: 24 }}>
+            <label className="form-label">Confirm New Password</label>
+            <input type="password" className="form-control" value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} required />
           </div>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <button type="submit" className="btn btn-primary" disabled={loading} style={{ fontWeight: 600, padding: '9px 20px' }}>
             {loading && <span className="spinner-border spinner-border-sm me-2" />}
-            Update Password
+            {loading ? 'Updating…' : 'Update Password'}
           </button>
         </form>
       </div>
-    </div>
+    </>
   );
 }

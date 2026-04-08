@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal, Form, Button } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import { BsPlus } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { facultyService } from '@/services/faculty.service';
@@ -9,134 +9,84 @@ import { DataTable } from '@/components/ui/DataTable';
 import type { Column } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import type { Thesis, Faculty, CreateThesisRequest } from '@/types/academic.types';
+import type { ThesisStatus } from '@/types/enums';
 
 export default function MyThesis() {
   const [theses, setTheses] = useState<Thesis[]>([]);
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [modal, setModal] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [title, setTitle] = useState('');
   const [submissionDate, setSubmissionDate] = useState('');
   const [supervisorId, setSupervisorId] = useState('');
 
-  const fetchData = async () => {
+  const load = async () => {
     try {
       setLoading(true);
-      const [thesisData, facData] = await Promise.all([
-        thesisService.getMy(),
-        facultyService.getAll(),
-      ]);
-      setTheses(thesisData);
-      setFaculties(facData);
-    } catch {
-      toast.error('Failed to load theses');
-    } finally {
-      setLoading(false);
-    }
+      const [thesisData, facData] = await Promise.all([thesisService.getMy(), facultyService.getAll()]);
+      setTheses(thesisData); setFaculties(facData);
+    } catch { toast.error('Failed to load theses'); }
+    finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { load(); }, []);
 
-  const openCreate = () => {
-    setTitle('');
-    setSubmissionDate(new Date().toISOString().split('T')[0]);
-    setSupervisorId('');
-    setShowModal(true);
-  };
+  const openCreate = () => { setTitle(''); setSubmissionDate(new Date().toISOString().split('T')[0]); setSupervisorId(''); setModal(true); };
 
   const handleSubmit = async () => {
+    setSaving(true);
     try {
-      const payload: CreateThesisRequest = {
-        title,
-        supervisorId,
-        submissionDate,
-        status: 'SUBMITTED' as import('@/types/enums').ThesisStatus,
-      };
+      const payload: CreateThesisRequest = { title, supervisorId, submissionDate, status: 'SUBMITTED' as ThesisStatus };
       await thesisService.create(payload);
-      toast.success('Thesis submitted successfully');
-      setShowModal(false);
-      fetchData();
-    } catch {
-      toast.error('Failed to submit thesis');
-    }
+      toast.success('Thesis submitted'); setModal(false); load();
+    } catch { toast.error('Failed to submit thesis'); }
+    finally { setSaving(false); }
   };
 
-  const getFacultyName = (id: string) => faculties.find((f) => f.id === id)?.name || '—';
-
   const columns: Column<Thesis>[] = [
-    { key: 'title', label: 'Title' },
-    {
-      key: 'supervisorId',
-      label: 'Supervisor',
-      render: (item) => getFacultyName(item.supervisorId),
-    },
-    { key: 'submissionDate', label: 'Submission Date' },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item) => <StatusBadge status={item.status} />,
-    },
+    { key: 'title',          label: 'Title' },
+    { key: 'supervisorId',   label: 'Supervisor',  render: item => faculties.find(f => f.id === item.supervisorId)?.name ?? '—' },
+    { key: 'submissionDate', label: 'Submitted' },
+    { key: 'status',         label: 'Status',      render: item => <StatusBadge status={item.status} /> },
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="My Thesis"
-        subtitle="View and submit your thesis"
-        action={
-          <Button variant="primary" size="sm" onClick={openCreate}>
-            <BsPlus className="me-1" /> Submit New Thesis
-          </Button>
-        }
+    <>
+      <PageHeader title="My Thesis" subtitle="View and submit your thesis"
+        action={<button className="btn btn-primary btn-sm" onClick={openCreate}><BsPlus className="me-1" />Submit New Thesis</button>}
       />
+      <DataTable columns={columns} data={theses} loading={loading} />
 
-      <DataTable
-        columns={columns}
-        data={theses}
-        loading={loading}
-      />
-
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Submit New Thesis</Modal.Title>
-        </Modal.Header>
+      <Modal show={modal} onHide={() => setModal(false)} size="lg">
+        <Modal.Header closeButton><Modal.Title>Submit New Thesis</Modal.Title></Modal.Header>
         <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Title</Form.Label>
-              <Form.Control
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter thesis title"
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Submission Date</Form.Label>
-              <Form.Control
-                type="date"
-                value={submissionDate}
-                onChange={(e) => setSubmissionDate(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Supervisor</Form.Label>
-              <Form.Select value={supervisorId} onChange={(e) => setSupervisorId(e.target.value)}>
-                <option value="">Select Supervisor</option>
-                {faculties.map((f) => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Form>
+          <div style={{ marginBottom: 14 }}>
+            <label className="form-label">Title</label>
+            <input className="form-control" value={title} onChange={e => setTitle(e.target.value)} placeholder="Enter thesis title" />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div>
+              <label className="form-label">Submission Date</label>
+              <input type="date" className="form-control" value={submissionDate} onChange={e => setSubmissionDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="form-label">Supervisor</label>
+              <select className="form-select" value={supervisorId} onChange={e => setSupervisorId(e.target.value)}>
+                <option value="">Select supervisor</option>
+                {faculties.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </div>
+          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit}>Submit</Button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModal(false)}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={handleSubmit} disabled={saving}>
+            {saving && <span className="spinner-border spinner-border-sm me-2" />}Submit
+          </button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </>
   );
 }

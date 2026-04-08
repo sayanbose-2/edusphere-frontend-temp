@@ -15,57 +15,25 @@ export default function FacultyWorkload() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [wlData, courseData] = await Promise.all([
-        workloadService.getByFaculty(user!.id),
-        courseService.getAll(),
-      ]);
-      setItems(wlData);
-      setCourses(courseData);
-    } catch {
-      toast.error('Failed to load workload');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (user) {
-      fetchData();
-    }
+    if (!user) return;
+    Promise.all([workloadService.getByFaculty(user.id), courseService.getAll()])
+      .then(([wl, crs]) => { setItems(wl); setCourses(crs); })
+      .catch(() => toast.error('Failed to load workload'))
+      .finally(() => setLoading(false));
   }, [user]);
 
-  const getCourseName = (id: string) => courses.find((c) => c.id === id)?.title || '—';
-
   const columns: Column<Workload>[] = [
-    {
-      key: 'courseId',
-      label: 'Course',
-      render: (item) => getCourseName(item.courseId),
-    },
-    { key: 'hours', label: 'Hours' },
+    { key: 'courseId', label: 'Course',   render: item => courses.find(c => c.id === item.courseId)?.title ?? '—' },
+    { key: 'hours',    label: 'Hours' },
     { key: 'semester', label: 'Semester' },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item) => <StatusBadge status={item.status} />,
-    },
+    { key: 'status',   label: 'Status',   render: item => <StatusBadge status={item.status} /> },
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="My Workload"
-        subtitle="View your teaching workload assignments"
-      />
-
-      <DataTable
-        columns={columns}
-        data={items}
-        loading={loading}
-      />
-    </div>
+    <>
+      <PageHeader title="My Workload" subtitle="View your teaching workload assignments" />
+      <DataTable columns={columns} data={items} loading={loading} />
+    </>
   );
 }

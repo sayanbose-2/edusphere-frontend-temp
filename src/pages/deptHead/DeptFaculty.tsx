@@ -15,60 +15,33 @@ export default function DeptFaculty() {
   const [myDept, setMyDept] = useState<Department | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const allDepts = await departmentService.getAll();
-      const found = allDepts.find((d) => d.headId === user?.id);
-      setMyDept(found || null);
-
-      if (found) {
-        const facData = await facultyService.getByDepartment(found.id);
-        setFaculty(facData);
-      } else {
-        const facData = await facultyService.getAll();
-        setFaculty(facData);
-      }
-    } catch {
-      toast.error('Failed to load faculty data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
-  }, []);
+    const load = async () => {
+      try {
+        const allDepts = await departmentService.getAll();
+        const found = allDepts.find(d => d.headId === user?.id) || null;
+        setMyDept(found);
+        const data = found ? await facultyService.getByDepartment(found.id) : await facultyService.getAll();
+        setFaculty(data);
+      } catch { toast.error('Failed to load faculty data'); }
+      finally { setLoading(false); }
+    };
+    load();
+  }, [user?.id]);
 
   const columns: Column<Faculty>[] = [
-    { key: 'name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Phone' },
+    { key: 'name',     label: 'Name' },
+    { key: 'email',    label: 'Email' },
+    { key: 'phone',    label: 'Phone' },
     { key: 'position', label: 'Position' },
-    {
-      key: 'joinDate',
-      label: 'Join Date',
-      render: (item) => item.joinDate ? new Date(item.joinDate).toLocaleDateString() : '-',
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item) => <StatusBadge status={item.status} />,
-    },
+    { key: 'joinDate', label: 'Join Date', render: item => item.joinDate ? new Date(item.joinDate).toLocaleDateString() : '—' },
+    { key: 'status',   label: 'Status',    render: item => <StatusBadge status={item.status} /> },
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Department Faculty"
-        subtitle={myDept ? `Faculty members in ${myDept.departmentName}` : 'All faculty members'}
-      />
-
-      <DataTable
-        columns={columns}
-        data={faculty}
-        loading={loading}
-      />
-    </div>
+    <>
+      <PageHeader title="Department Faculty" subtitle={myDept ? `Faculty members in ${myDept.departmentName}` : 'All faculty members'} />
+      <DataTable columns={columns} data={faculty} loading={loading} />
+    </>
   );
 }

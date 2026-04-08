@@ -7,7 +7,7 @@ export const userService = {
     apiClient.get<User[]>('/users').then((r) => r.data),
 
   update: (id: string, data: Partial<User>) =>
-    apiClient.put<User>(`/users/${id}`, data).then((r) => r.data),
+    apiClient.post<User>(`/users/${id}`, data).then((r) => r.data),
 
   delete: (id: string) =>
     apiClient.delete(`/users/${id}`),

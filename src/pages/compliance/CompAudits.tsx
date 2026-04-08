@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal, Form, Button } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import { BsPencil } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { auditService } from '@/services/audit.service';
@@ -13,173 +13,97 @@ import type { Audit, ReviewAuditRequest } from '@/types/compliance.types';
 
 export default function CompAudits() {
   const [items, setItems] = useState<Audit[]>([]);
+  const [allItems, setAllItems] = useState<Audit[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editItem, setEditItem] = useState<Audit | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('');
-
+  const [modal, setModal] = useState(false);
+  const [selected, setSelected] = useState<Audit | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
   const [findings, setFindings] = useState('');
 
-  const fetchData = async () => {
+  const load = async () => {
     try {
       setLoading(true);
       const data = await auditService.getAll();
+      setAllItems(data);
       setItems(data);
-    } catch {
-      toast.error('Failed to load audits');
-    } finally {
-      setLoading(false);
-    }
+    } catch { toast.error('Failed to load audits'); }
+    finally { setLoading(false); }
   };
 
-  const fetchByStatus = async (status: string) => {
-    if (!status) {
-      fetchData();
-      return;
-    }
-    try {
-      setLoading(true);
-      const allAudits = await auditService.getAll();
-      const filtered = allAudits.filter((a) => a.status === status);
-      setItems(filtered);
-    } catch {
-      toast.error('Failed to filter audits');
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => { load(); }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const handleStatusFilterChange = (value: string) => {
+  const handleFilterChange = (value: string) => {
     setStatusFilter(value);
-    fetchByStatus(value);
+    setItems(value ? allItems.filter(a => a.status === value) : allItems);
   };
 
-  const openReview = (item: Audit) => {
-    setEditItem(item);
-    setFindings(item.findings || '');
-    setShowModal(true);
-  };
+  const openReview = (item: Audit) => { setSelected(item); setFindings(item.findings || ''); setModal(true); };
 
   const handleReview = async () => {
-    if (!editItem) return;
+    if (!selected) return;
+    setSaving(true);
     try {
-      const payload: ReviewAuditRequest = {
-        findings,
-        status: AuditStatus.COMPLETED,
-      };
-      await auditService.review(editItem.auditId, payload);
-      toast.success('Audit reviewed successfully');
-      setShowModal(false);
+      const payload: ReviewAuditRequest = { findings, status: AuditStatus.COMPLETED };
+      await auditService.review(selected.auditId, payload);
+      toast.success('Audit reviewed');
+      setModal(false);
       setStatusFilter('');
-      fetchData();
-    } catch {
-      toast.error('Failed to review audit');
-    }
+      load();
+    } catch { toast.error('Failed to review audit'); }
+    finally { setSaving(false); }
   };
 
   const columns: Column<Audit>[] = [
-    {
-      key: 'entityType',
-      label: 'Entity Type',
-      render: (item) => formatEnum(item.entityType),
-    },
-    { key: 'scope', label: 'Scope' },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item) => <StatusBadge status={item.status} />,
-    },
-    { key: 'auditDate', label: 'Audit Date' },
-    {
-      key: 'findings',
-      label: 'Findings',
-      render: (item) =>
-        item.findings
-          ? item.findings.length > 60
-            ? item.findings.substring(0, 60) + '...'
-            : item.findings
-          : '—',
-    },
+    { key: 'entityType', label: 'Entity Type', render: item => formatEnum(item.entityType) },
+    { key: 'scope',      label: 'Scope' },
+    { key: 'status',     label: 'Status', render: item => <StatusBadge status={item.status} /> },
+    { key: 'auditDate',  label: 'Audit Date' },
+    { key: 'findings',   label: 'Findings', render: item => item.findings ? (item.findings.length > 60 ? item.findings.slice(0, 60) + '…' : item.findings) : '—' },
   ];
 
   return (
-    <div>
+    <>
       <PageHeader title="Compliance Audits" subtitle="Review audit records" />
-
-      <div className="mb-3">
-        <Form.Group className="d-flex align-items-center gap-2" style={{ maxWidth: 300 }}>
-          <Form.Label className="mb-0 small text-nowrap">Filter by Status:</Form.Label>
-          <Form.Select
-            size="sm"
-            value={statusFilter}
-            onChange={(e) => handleStatusFilterChange(e.target.value)}
-          >
-            <option value="">All</option>
-            <option value="PENDING">PENDING</option>
-            <option value="COMPLETED">COMPLETED</option>
-            <option value="FLAGGED">FLAGGED</option>
-          </Form.Select>
-        </Form.Group>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <label style={{ fontSize: 13, whiteSpace: 'nowrap', color: 'var(--text-2)' }}>Filter by Status:</label>
+        <select className="form-select form-select-sm" value={statusFilter} onChange={e => handleFilterChange(e.target.value)} style={{ width: 160 }}>
+          <option value="">All</option>
+          <option value="PENDING">Pending</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="FLAGGED">Flagged</option>
+        </select>
       </div>
-
-      <DataTable
-        columns={columns}
-        data={items}
-        loading={loading}
-        actions={(item) => (
-          <div className="d-flex gap-1">
-            <Button
-              variant="outline-primary"
-              size="sm"
-              onClick={() => openReview(item)}
-              title="Review"
-            >
-              <BsPencil /> Review
-            </Button>
-          </div>
+      <DataTable columns={columns} data={items} loading={loading}
+        actions={item => (
+          <button className="icon-btn" onClick={() => openReview(item)} title="Review"><BsPencil size={13} /></button>
         )}
       />
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Review Audit</Modal.Title>
-        </Modal.Header>
+      <Modal show={modal} onHide={() => setModal(false)} size="lg">
+        <Modal.Header closeButton><Modal.Title>Review Audit</Modal.Title></Modal.Header>
         <Modal.Body>
-          {editItem && (
-            <div className="mb-3 p-3 rounded" style={{ background: 'var(--bg-raised)', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              <strong>Entity:</strong> {formatEnum(editItem.entityType)}
-              <span className="mx-2">|</span>
-              <strong>Scope:</strong> {editItem.scope}
-              <span className="mx-2">|</span>
-              <strong>Date:</strong> {editItem.auditDate}
+          {selected && (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 14px', fontSize: 13, color: 'var(--text-2)', marginBottom: 16 }}>
+              <strong>Entity:</strong> {formatEnum(selected.entityType)}
+              <span style={{ margin: '0 10px' }}>|</span>
+              <strong>Scope:</strong> {selected.scope}
+              <span style={{ margin: '0 10px' }}>|</span>
+              <strong>Date:</strong> {selected.auditDate}
             </div>
           )}
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Findings</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={5}
-                value={findings}
-                onChange={(e) => setFindings(e.target.value)}
-                placeholder="Enter your review findings..."
-              />
-            </Form.Group>
-          </Form>
+          <div>
+            <label className="form-label">Findings</label>
+            <textarea className="form-control" rows={5} value={findings} onChange={e => setFindings(e.target.value)} placeholder="Enter your review findings..." />
+          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleReview}>
-            Submit Review
-          </Button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModal(false)}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={handleReview} disabled={saving}>
+            {saving && <span className="spinner-border spinner-border-sm me-2" />}Submit Review
+          </button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </>
   );
 }

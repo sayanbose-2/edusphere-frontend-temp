@@ -1,85 +1,107 @@
 import { useEffect, useState } from 'react';
-import { Card, Row, Col, Spinner } from 'react-bootstrap';
-import { BsShieldCheck, BsClipboard2Check, BsFileEarmarkBarGraph } from 'react-icons/bs';
+import { Row, Col, Spinner } from 'react-bootstrap';
+import { BsShieldCheck, BsClipboard2Check, BsFileEarmarkBarGraph, BsListUl, BsSearch, BsArrowRight } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { auditService } from '@/services/audit.service';
 import { complianceService } from '@/services/compliance.service';
 import { reportService } from '@/services/report.service';
 import { useAuth } from '@/contexts/AuthContext';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { useNavigate } from 'react-router-dom';
 
-interface ComplianceStats {
-  pendingAudits: number;
-  complianceRecords: number;
-  reports: number;
+function greet() {
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+
+function dateStr() {
+  return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
 export default function ComplianceDashboard() {
   const { user } = useAuth();
-  const [stats, setStats] = useState<ComplianceStats>({
-    pendingAudits: 0,
-    complianceRecords: 0,
-    reports: 0,
-  });
+  const navigate = useNavigate();
+  const [counts, setCounts] = useState({ pending: 0, records: 0, reports: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [audits, complianceRecords, reports] = await Promise.all([
-            auditService.getAll(),
-            complianceService.getAll(),
-            reportService.getAll(),
-          ]);
-
-          const pendingAudits = audits.filter((a) => a.status === 'PENDING').length;
-
-          setStats({
-            pendingAudits,
-            complianceRecords: complianceRecords.length,
-            reports: reports.length,
-          });
-      } catch {
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    Promise.allSettled([auditService.getAll(), complianceService.getAll(), reportService.getAll()])
+      .then(([a, c, r]) => {
+        const audits = a.status === 'fulfilled' ? a.value : [];
+        setCounts({
+          pending: audits.filter(x => x.status === 'PENDING').length,
+          records: c.status === 'fulfilled' ? c.value.length : 0,
+          reports: r.status === 'fulfilled' ? r.value.length : 0,
+        });
+      }).catch(() => toast.error('Failed to load dashboard'))
+      .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center py-5">
-        <Spinner animation="border" variant="primary" />
-      </div>
-    );
-  }
-
-  const statCards = [
-    { label: 'Pending Audits', value: stats.pendingAudits, icon: <BsShieldCheck size={28} />, color: 'warning' },
-    { label: 'Compliance Records', value: stats.complianceRecords, icon: <BsClipboard2Check size={28} />, color: 'primary' },
-    { label: 'Reports', value: stats.reports, icon: <BsFileEarmarkBarGraph size={28} />, color: 'info' },
+  const stats = [
+    { label: 'Pending Audits',      value: counts.pending, icon: <BsShieldCheck size={18} />,        color: '#D97706', bg: 'rgba(217,119,6,0.08)',  path: '/compliance/audits' },
+    { label: 'Compliance Records',  value: counts.records, icon: <BsClipboard2Check size={18} />,    color: '#2563EB', bg: 'rgba(37,99,235,0.08)',   path: '/compliance/records' },
+    { label: 'Reports',             value: counts.reports, icon: <BsFileEarmarkBarGraph size={18} />, color: '#16A34A', bg: 'rgba(22,163,74,0.08)',   path: '/compliance/reports' },
   ];
+
+  const quickLinks = [
+    { label: 'Audits',             path: '/compliance/audits',      icon: <BsShieldCheck size={14} /> },
+    { label: 'Audit Logs',         path: '/compliance/audit-logs',  icon: <BsListUl size={14} /> },
+    { label: 'Research Compliance',path: '/compliance/research',    icon: <BsSearch size={14} /> },
+  ];
+
+  if (loading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}><Spinner animation="border" /></div>;
+  }
 
   return (
     <>
-      <PageHeader title="Compliance Dashboard" subtitle={`Welcome back, ${user?.name}`} />
+      <div className="welcome-banner" style={{ background: 'linear-gradient(135deg, #1C1917 0%, #44403C 60%, #57534E 100%)', color: '#fff' }}>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <p style={{ margin: '0 0 5px', fontSize: 11, opacity: 0.55, letterSpacing: 0.5, textTransform: 'uppercase' }}>{dateStr()}</p>
+          <h2 style={{ margin: '0 0 5px', fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>
+            {greet()}, {user?.name?.split(' ')[0]}
+          </h2>
+          <p style={{ margin: 0, fontSize: 13, opacity: 0.6 }}>Compliance Officer · Monitoring overview</p>
+        </div>
+        <BsShieldCheck size={56} style={{ opacity: 0.08 }} />
+      </div>
 
       <Row className="g-3 mb-4">
-        {statCards.map((card) => (
-          <Col key={card.label} xs={12} sm={6} md={4}>
-            <Card className="stat-card h-100">
-              <Card.Body className="text-center">
-                <div className={`text-${card.color} mb-2`}>{card.icon}</div>
-                <h3 className="fw-bold mb-1">{card.value}</h3>
-                <small style={{ color: 'var(--text-secondary)' }}>{card.label}</small>
-              </Card.Body>
-            </Card>
+        {stats.map(s => (
+          <Col key={s.label} xs={12} md={4}>
+            <div className="feature-card" onClick={() => navigate(s.path)}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 9, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color }}>{s.icon}</div>
+                <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.8px', lineHeight: 1 }}>{s.value}</span>
+              </div>
+              <h6 style={{ margin: '0 0 14px', fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{s.label}</h6>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: s.color, fontWeight: 600 }}>
+                View <BsArrowRight size={11} />
+              </div>
+            </div>
           </Col>
         ))}
       </Row>
+
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
+        <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)', background: 'var(--subtle)' }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Quick Access</span>
+        </div>
+        {quickLinks.map((link, i) => (
+          <div
+            key={link.label}
+            onClick={() => navigate(link.path)}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 18px', borderBottom: i < quickLinks.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg)')}
+            onMouseLeave={e => (e.currentTarget.style.background = '')}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
+              <span style={{ color: 'var(--text-2)' }}>{link.icon}</span>
+              {link.label}
+            </div>
+            <BsArrowRight size={12} style={{ color: 'var(--text-3)' }} />
+          </div>
+        ))}
+      </div>
     </>
   );
 }

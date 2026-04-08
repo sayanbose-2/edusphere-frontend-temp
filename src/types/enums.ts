@@ -87,6 +87,12 @@ export enum DocumentType {
   OTHER = 'OTHER',
 }
 
+export enum Gender {
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+  PREFER_NOT_TO_SAY = 'PREFER_NOT_TO_SAY',
+}
+
 export enum NotificationType {
   ENROLLMENT = 'ENROLLMENT',
   COURSE = 'COURSE',

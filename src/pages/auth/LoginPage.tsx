@@ -11,15 +11,15 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     try {
       await login({ email, password });
-      toast.success('Login successful!');
+      toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Login failed';
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Invalid credentials';
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -28,32 +28,27 @@ export default function LoginPage() {
 
   return (
     <div className="auth-page">
-      {/* Left branding panel */}
-      <div className="auth-panel-left d-none d-lg-flex">
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 360 }}>
-          <div className="auth-logo-ring" style={{ width: 80, height: 80 }}>
-            <BsMortarboardFill size={36} style={{ color: '#f0a500' }} />
+      <div className="auth-left">
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 340 }}>
+          <div style={{ width: 72, height: 72, borderRadius: 18, background: 'rgba(37,99,235,0.15)', border: '1px solid rgba(37,99,235,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <BsMortarboardFill size={32} style={{ color: '#60A5FA' }} />
           </div>
-          <h2 style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.8rem', margin: '16px 0 8px', letterSpacing: '-0.3px' }}>
-            EduSphere
-          </h2>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: 40 }}>
-            Integrated Academic Management System
-          </p>
+          <h2 style={{ color: '#F1F5F9', fontWeight: 800, fontSize: 28, margin: '0 0 8px', letterSpacing: '-0.5px' }}>EduSphere</h2>
+          <p style={{ color: 'rgba(241,245,249,0.5)', fontSize: 14, margin: '0 0 44px', lineHeight: 1.6 }}>Integrated Academic Management System</p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left' }}>
             {[
-              { icon: <BsPeopleFill size={16} />, title: 'Multi-Role Access', desc: 'Students, Faculty, Admins & more' },
-              { icon: <BsBook size={16} />, title: 'Academic Records', desc: 'Grades, courses, and curriculum' },
-              { icon: <BsAwardFill size={16} />, title: 'Research & Thesis', desc: 'Track academic projects end-to-end' },
+              { icon: <BsPeopleFill size={14} />, title: 'Multi-Role Access',  desc: 'Students, Faculty, Admins & more' },
+              { icon: <BsBook size={14} />,        title: 'Academic Records',   desc: 'Grades, courses, and curriculum' },
+              { icon: <BsAwardFill size={14} />,   title: 'Research & Thesis',  desc: 'End-to-end project tracking' },
             ].map(item => (
-              <div key={item.title} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                <div style={{ width: 36, height: 36, borderRadius: '8px', background: 'rgba(240,165,0,0.15)', border: '1px solid rgba(240,165,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f0a500', flexShrink: 0 }}>
+              <div key={item.title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60A5FA', flexShrink: 0 }}>
                   {item.icon}
                 </div>
                 <div>
-                  <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '0.88rem' }}>{item.title}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', marginTop: 2 }}>{item.desc}</div>
+                  <div style={{ color: '#F1F5F9', fontWeight: 600, fontSize: 13 }}>{item.title}</div>
+                  <div style={{ color: 'rgba(241,245,249,0.4)', fontSize: 12, marginTop: 2 }}>{item.desc}</div>
                 </div>
               </div>
             ))}
@@ -61,57 +56,34 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right form panel */}
-      <div className="auth-panel-right">
-        <div className="auth-card">
-          <div className="text-center mb-4">
-            <div className="d-lg-none mb-3">
-              <div className="auth-logo-ring" style={{ background: 'var(--accent-dim)', border: '2px solid var(--accent)', width: 56, height: 56 }}>
-                <BsMortarboardFill size={24} style={{ color: 'var(--accent)' }} />
-              </div>
+      <div className="auth-right">
+        <div className="auth-box">
+          <div style={{ textAlign: 'center', marginBottom: 28 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 11, background: 'var(--blue-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <BsMortarboardFill size={20} style={{ color: 'var(--blue)' }} />
             </div>
-            <h5 style={{ color: 'var(--text-primary)', fontWeight: 700, marginBottom: 4 }}>
-              Welcome back
-            </h5>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: 0 }}>
-              Sign in to your EduSphere account
-            </p>
+            <h5 style={{ color: 'var(--text)', fontWeight: 700, margin: '0 0 5px', fontSize: 18 }}>Sign in to EduSphere</h5>
+            <p style={{ color: 'var(--text-2)', fontSize: 13, margin: 0 }}>Enter your credentials to continue</p>
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="mb-3">
+            <div style={{ marginBottom: 14 }}>
               <label className="form-label">Email address</label>
-              <input
-                type="email"
-                className="form-control"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-              />
+              <input type="email" className="form-control" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required />
             </div>
-            <div className="mb-4">
+            <div style={{ marginBottom: 24 }}>
               <label className="form-label">Password</label>
-              <input
-                type="password"
-                className="form-control"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
+              <input type="password" className="form-control" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
             </div>
-            <button type="submit" className="btn btn-primary w-100" disabled={loading} style={{ padding: '10px', fontSize: '0.9rem' }}>
-              {loading
-                ? <span className="spinner-border spinner-border-sm me-2" style={{ color: '#fff' }} />
-                : null}
-              Sign In
+            <button type="submit" className="btn btn-primary w-100" disabled={loading} style={{ padding: '10px', fontWeight: 600, fontSize: 14 }}>
+              {loading && <span className="spinner-border spinner-border-sm me-2" />}
+              {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
 
-          <p className="text-center mt-3 mb-0" style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+          <p style={{ textAlign: 'center', marginTop: 20, marginBottom: 0, fontSize: 13, color: 'var(--text-2)' }}>
             Don't have an account?{' '}
-            <Link to="/register" style={{ color: 'var(--accent)', fontWeight: 600 }}>Register</Link>
+            <Link to="/register" style={{ color: 'var(--blue)', fontWeight: 600 }}>Create one</Link>
           </p>
         </div>
       </div>

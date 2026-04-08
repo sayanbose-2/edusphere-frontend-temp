@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Row, Col, Modal, Form, Button, Spinner } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import { BsPencil, BsPersonPlus, BsBuilding } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { departmentService } from '@/services/department.service';
@@ -10,15 +10,15 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Status } from '@/types/enums';
 import type { Department, CreateDepartmentRequest, Faculty } from '@/types/academic.types';
 
+type ModalMode = 'edit' | 'assignHead' | null;
+
 export default function DeptDepartment() {
   const { user } = useAuth();
-  const [, setDepartments] = useState<Department[]>([]);
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [myDept, setMyDept] = useState<Department | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showHeadModal, setShowHeadModal] = useState(false);
+  const [modal, setModal] = useState<ModalMode>(null);
+  const [saving, setSaving] = useState(false);
 
   const [departmentName, setDepartmentName] = useState('');
   const [departmentCode, setDepartmentCode] = useState('');
@@ -26,200 +26,148 @@ export default function DeptDepartment() {
   const [status, setStatus] = useState<Status>('ACTIVE' as Status);
   const [headId, setHeadId] = useState('');
 
-  const fetchData = async () => {
+  const load = async () => {
     try {
       setLoading(true);
-      const [allDepts, facData] = await Promise.all([
-        departmentService.getAll(),
-        facultyService.getAll(),
-      ]);
-      setDepartments(allDepts);
+      const [allDepts, facData] = await Promise.all([departmentService.getAll(), facultyService.getAll()]);
       setFaculties(facData);
-
-      const found = allDepts.find((d) => d.headId === user?.id);
-      setMyDept(found || null);
-    } catch {
-      toast.error('Failed to load department data');
-    } finally {
-      setLoading(false);
-    }
+      setMyDept(allDepts.find(d => d.headId === user?.id) || null);
+    } catch { toast.error('Failed to load department data'); }
+    finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { load(); }, [user?.id]);
 
   const openEdit = () => {
     if (!myDept) return;
-    setDepartmentName(myDept.departmentName);
-    setDepartmentCode(myDept.departmentCode);
-    setContactInfo(myDept.contactInfo);
-    setStatus(myDept.status);
-    setShowEditModal(true);
+    setDepartmentName(myDept.departmentName); setDepartmentCode(myDept.departmentCode);
+    setContactInfo(myDept.contactInfo); setStatus(myDept.status);
+    setModal('edit');
   };
 
   const handleUpdate = async () => {
     if (!myDept) return;
+    setSaving(true);
     try {
       const payload: CreateDepartmentRequest = { departmentName, departmentCode, contactInfo, status };
       await departmentService.update(myDept.id, payload);
-      toast.success('Department updated');
-      setShowEditModal(false);
-      fetchData();
-    } catch {
-      toast.error('Failed to update department');
-    }
-  };
-
-  const openAssignHead = () => {
-    setHeadId('');
-    setShowHeadModal(true);
+      toast.success('Department updated'); setModal(null); load();
+    } catch { toast.error('Failed to update department'); }
+    finally { setSaving(false); }
   };
 
   const handleAssignHead = async () => {
     if (!myDept) return;
+    setSaving(true);
     try {
       await departmentService.assignHead(myDept.id, headId);
-      toast.success('Department head updated');
-      setShowHeadModal(false);
-      fetchData();
-    } catch {
-      toast.error('Failed to assign department head');
-    }
+      toast.success('Department head updated'); setModal(null); load();
+    } catch { toast.error('Failed to assign department head'); }
+    finally { setSaving(false); }
   };
 
   if (loading) {
     return (
-      <div className="text-center py-5">
-        <Spinner animation="border" variant="primary" />
-      </div>
+      <>
+        <PageHeader title="My Department" subtitle="Department details" />
+        <div style={{ textAlign: 'center', padding: '48px 0' }}>
+          <span className="spinner-border" style={{ color: 'var(--blue)' }} />
+        </div>
+      </>
     );
   }
 
   if (!myDept) {
     return (
-      <div>
+      <>
         <PageHeader title="My Department" subtitle="Department details" />
-        <div className="text-center text-muted py-5">
+        <div style={{ textAlign: 'center', color: 'var(--text-2)', padding: '48px 0', fontSize: 14 }}>
           No department is currently assigned to you.
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div>
-      <PageHeader
-        title="My Department"
-        subtitle="View and manage your department"
+    <>
+      <PageHeader title="My Department" subtitle="View and manage your department"
         action={
-          <div className="d-flex gap-2">
-            <Button variant="outline-primary" size="sm" onClick={openEdit}>
-              <BsPencil className="me-1" /> Edit
-            </Button>
-            <Button variant="outline-info" size="sm" onClick={openAssignHead}>
-              <BsPersonPlus className="me-1" /> Change Head
-            </Button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-outline-primary btn-sm" onClick={openEdit}><BsPencil className="me-1" />Edit</button>
+            <button className="btn btn-outline-secondary btn-sm" onClick={() => { setHeadId(''); setModal('assignHead'); }}><BsPersonPlus className="me-1" />Change Head</button>
           </div>
         }
       />
 
-      <Row className="g-4">
-        <Col md={8}>
-          <Card>
-            <Card.Body>
-              <div className="d-flex align-items-center mb-3">
-                <BsBuilding size={24} className="text-primary me-2" />
-                <h5 className="mb-0 fw-bold">{myDept.departmentName}</h5>
-              </div>
-              <Row className="g-3">
-                <Col sm={6}>
-                  <small className="text-muted d-block">Department Code</small>
-                  <span className="fw-semibold">{myDept.departmentCode}</span>
-                </Col>
-                <Col sm={6}>
-                  <small className="text-muted d-block">Status</small>
-                  <StatusBadge status={myDept.status} />
-                </Col>
-                <Col sm={6}>
-                  <small className="text-muted d-block">Contact Info</small>
-                  <span>{myDept.contactInfo || '-'}</span>
-                </Col>
-                <Col sm={6}>
-                  <small className="text-muted d-block">Department Head</small>
-                  <span className="fw-semibold">{myDept.headName || '-'}</span>
-                </Col>
-                <Col sm={6}>
-                  <small className="text-muted d-block">Created At</small>
-                  <span>{new Date(myDept.createdAt).toLocaleDateString()}</span>
-                </Col>
-                <Col sm={6}>
-                  <small className="text-muted d-block">Last Updated</small>
-                  <span>{new Date(myDept.updatedAt).toLocaleDateString()}</span>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      <div style={{ maxWidth: 640, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+          <BsBuilding size={22} style={{ color: 'var(--blue)' }} />
+          <span style={{ fontSize: 17, fontWeight: 700 }}>{myDept.departmentName}</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+          {[
+            { label: 'Department Code', value: myDept.departmentCode },
+            { label: 'Status', value: <StatusBadge status={myDept.status} /> },
+            { label: 'Contact Info', value: myDept.contactInfo || '—' },
+            { label: 'Department Head', value: myDept.headName || '—' },
+            { label: 'Created', value: new Date(myDept.createdAt).toLocaleDateString() },
+            { label: 'Last Updated', value: new Date(myDept.updatedAt).toLocaleDateString() },
+          ].map(({ label, value }) => (
+            <div key={label}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div>
+              <div style={{ fontSize: 14 }}>{value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-      {/* Edit Department Modal */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Department</Modal.Title>
-        </Modal.Header>
+      <Modal show={modal === 'edit'} onHide={() => setModal(null)}>
+        <Modal.Header closeButton><Modal.Title>Edit Department</Modal.Title></Modal.Header>
         <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Department Name</Form.Label>
-              <Form.Control value={departmentName} onChange={(e) => setDepartmentName(e.target.value)} />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Department Code</Form.Label>
-              <Form.Control value={departmentCode} onChange={(e) => setDepartmentCode(e.target.value)} />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Contact Info</Form.Label>
-              <Form.Control value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Status</Form.Label>
-              <Form.Select value={status} onChange={(e) => setStatus(e.target.value as Status)}>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="INACTIVE">INACTIVE</option>
-              </Form.Select>
-            </Form.Group>
-          </Form>
+          <div style={{ marginBottom: 14 }}>
+            <label className="form-label">Department Name</label>
+            <input className="form-control" value={departmentName} onChange={e => setDepartmentName(e.target.value)} />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label className="form-label">Department Code</label>
+            <input className="form-control" value={departmentCode} onChange={e => setDepartmentCode(e.target.value)} />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label className="form-label">Contact Info</label>
+            <input className="form-control" value={contactInfo} onChange={e => setContactInfo(e.target.value)} />
+          </div>
+          <div>
+            <label className="form-label">Status</label>
+            <select className="form-select" value={status} onChange={e => setStatus(e.target.value as Status)}>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancel</Button>
-          <Button variant="primary" onClick={handleUpdate}>Save</Button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={handleUpdate} disabled={saving}>
+            {saving && <span className="spinner-border spinner-border-sm me-2" />}Save
+          </button>
         </Modal.Footer>
       </Modal>
 
-      {/* Assign Head Modal */}
-      <Modal show={showHeadModal} onHide={() => setShowHeadModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Change Department Head</Modal.Title>
-        </Modal.Header>
+      <Modal show={modal === 'assignHead'} onHide={() => setModal(null)}>
+        <Modal.Header closeButton><Modal.Title>Change Department Head</Modal.Title></Modal.Header>
         <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Select Faculty</Form.Label>
-              <Form.Select value={headId} onChange={(e) => setHeadId(e.target.value)}>
-                <option value="">Select Faculty</option>
-                {faculties.map((f) => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Form>
+          <label className="form-label">Select Faculty</label>
+          <select className="form-select" value={headId} onChange={e => setHeadId(e.target.value)}>
+            <option value="">Select faculty</option>
+            {faculties.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+          </select>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowHeadModal(false)}>Cancel</Button>
-          <Button variant="primary" onClick={handleAssignHead}>Assign</Button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={handleAssignHead} disabled={saving || !headId}>
+            {saving && <span className="spinner-border spinner-border-sm me-2" />}Assign
+          </button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </>
   );
 }

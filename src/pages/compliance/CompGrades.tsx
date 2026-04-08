@@ -11,39 +11,25 @@ export default function CompGrades() {
   const [items, setItems] = useState<Grade[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const data = await gradeService.getAll();
-      setItems(data);
-    } catch {
-      toast.error('Failed to load grades');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
+    gradeService.getAll()
+      .then(setItems)
+      .catch(() => toast.error('Failed to load grades'))
+      .finally(() => setLoading(false));
   }, []);
 
   const columns: Column<Grade>[] = [
-    { key: 'examId', label: 'Exam ID' },
+    { key: 'examId',    label: 'Exam ID' },
     { key: 'studentId', label: 'Student ID' },
-    { key: 'score', label: 'Score' },
-    { key: 'grade', label: 'Grade' },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item) => <StatusBadge status={item.status} />,
-    },
+    { key: 'score',     label: 'Score' },
+    { key: 'grade',     label: 'Grade' },
+    { key: 'status',    label: 'Status', render: item => <StatusBadge status={item.status} /> },
   ];
 
   return (
-    <div>
+    <>
       <PageHeader title="Grades" subtitle="View student grades (read-only)" />
-
       <DataTable columns={columns} data={items} loading={loading} />
-    </div>
+    </>
   );
 }

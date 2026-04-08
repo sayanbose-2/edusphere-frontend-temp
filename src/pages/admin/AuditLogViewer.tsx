@@ -1,79 +1,51 @@
 import { useState, useEffect } from 'react';
-import { Form } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { auditLogService } from '@/services/audit.service';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { DataTable } from '@/components/ui/DataTable';
-import type { Column } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { formatEnum } from '@/utils/formatters';
+import type { Column } from '@/components/ui/DataTable';
 import type { AuditLog } from '@/types/compliance.types';
 
 export default function AuditLogViewer() {
   const [allItems, setAllItems] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [severityFilter, setSeverityFilter] = useState<string>('');
+  const [severityFilter, setSeverityFilter] = useState('');
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setAllItems(await auditLogService.getAll());
-    } catch {
-      toast.error('Failed to load audit logs');
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    (async () => {
+      try { setLoading(true); setAllItems(await auditLogService.getAll()); }
+      catch { toast.error('Failed to load audit logs'); }
+      finally { setLoading(false); }
+    })();
+  }, []);
 
-  useEffect(() => { fetchData(); }, []);
-
-  // Client-side filtering — /severity endpoint is ADMIN-only; keep it consistent here too
-  const items = severityFilter
-    ? allItems.filter((l) => l.severity === severityFilter)
-    : allItems;
+  const items = severityFilter ? allItems.filter(l => l.severity === severityFilter) : allItems;
 
   const columns: Column<AuditLog>[] = [
-    { key: 'action', label: 'Action' },
-    { key: 'resource', label: 'Resource' },
-    {
-      key: 'logType',
-      label: 'Type',
-      render: (item) => formatEnum(item.logType),
-    },
-    {
-      key: 'severity',
-      label: 'Severity',
-      render: (item) => <StatusBadge status={item.severity} />,
-    },
-    {
-      key: 'details',
-      label: 'Details',
-      render: (item) =>
-        item.details
-          ? item.details.length > 60 ? item.details.substring(0, 60) + '...' : item.details
-          : '—',
-    },
-    { key: 'timestamp', label: 'Timestamp' },
+    { key: 'action',    label: 'Action' },
+    { key: 'resource',  label: 'Resource' },
+    { key: 'logType',   label: 'Type', render: item => formatEnum(item.logType) },
+    { key: 'severity',  label: 'Severity', render: item => <StatusBadge status={item.severity} /> },
+    { key: 'details',   label: 'Details', render: item => item.details ? (item.details.length > 60 ? item.details.slice(0, 60) + '…' : item.details) : '—' },
+    { key: 'timestamp', label: 'Timestamp', render: item => new Date(item.timestamp).toLocaleString() },
   ];
 
   return (
-    <div>
-      <PageHeader title="Audit Logs" subtitle="View system audit logs (read-only)" />
-
-      <div className="mb-3">
-        <Form.Group className="d-flex align-items-center gap-2" style={{ maxWidth: 300 }}>
-          <Form.Label className="mb-0 small text-nowrap">Filter by Severity:</Form.Label>
-          <Form.Select size="sm" value={severityFilter} onChange={(e) => setSeverityFilter(e.target.value)}>
-            <option value="">All</option>
-            <option value="INFO">Info</option>
-            <option value="WARN">Warn</option>
-            <option value="ERROR">Error</option>
-            <option value="CRITICAL">Critical</option>
-          </Form.Select>
-        </Form.Group>
+    <>
+      <PageHeader title="Audit Logs" subtitle="System activity log — read only" />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <label className="form-label" style={{ marginBottom: 0, whiteSpace: 'nowrap' }}>Filter by severity</label>
+        <select className="form-select form-select-sm" value={severityFilter} onChange={e => setSeverityFilter(e.target.value)} style={{ maxWidth: 160 }}>
+          <option value="">All</option>
+          <option value="INFO">Info</option>
+          <option value="WARN">Warn</option>
+          <option value="ERROR">Error</option>
+          <option value="CRITICAL">Critical</option>
+        </select>
       </div>
-
       <DataTable columns={columns} data={items} loading={loading} />
-    </div>
+    </>
   );
 }

@@ -17,6 +17,12 @@ export const researchService = {
   addFaculty: (projectId: string, facultyId: string) =>
     apiClient.post(`/research-projects/${projectId}/faculty`, null, { params: { facultyId } }),
 
+  removeFaculty: (projectId: string, facultyId: string) =>
+    apiClient.delete(`/research-projects/${projectId}/faculty/${facultyId}`),
+
   addStudent: (projectId: string, studentId: string) =>
     apiClient.post(`/research-projects/${projectId}/students`, null, { params: { studentId } }),
+
+  removeStudent: (projectId: string, studentId: string) =>
+    apiClient.delete(`/research-projects/${projectId}/students/${studentId}`),
 };

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Table, Spinner } from 'react-bootstrap';
-import { BsSearch, BsInboxFill } from 'react-icons/bs';
+import { Table } from 'react-bootstrap';
+import { BsSearch, BsInbox } from 'react-icons/bs';
 import type { ReactNode } from 'react';
 
 export interface Column<T> {
@@ -9,7 +9,7 @@ export interface Column<T> {
   render?: (item: T) => ReactNode;
 }
 
-interface DataTableProps<T> {
+interface Props<T> {
   columns: Column<T>[];
   data: T[];
   loading?: boolean;
@@ -19,125 +19,108 @@ interface DataTableProps<T> {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getRowKey(item: any, index: number): string {
-  if (typeof item.id === 'string') return item.id;
-  if (typeof item.auditId === 'string') return item.auditId;
-  if (typeof item.notificationId === 'string') return item.notificationId;
-  if (typeof item.projectID === 'string') return item.projectID;
-  if (typeof item.studentDocumentId === 'string') return item.studentDocumentId;
-  return String(index);
+function rowKey(item: any, i: number): string {
+  return item.id ?? item.auditId ?? item.notificationId ?? item.projectID ?? item.studentDocumentId ?? String(i);
 }
 
-export function DataTable<T>({
-  columns,
-  data,
-  loading,
-  searchable = true,
-  onRowClick,
-  actions,
-}: DataTableProps<T>) {
+function SkeletonRows({ cols }: { cols: number }) {
+  return (
+    <>
+      {[1, 2, 3, 4, 5].map(i => (
+        <tr key={i}>
+          {Array.from({ length: cols }).map((_, j) => (
+            <td key={j} style={{ padding: '14px 16px' }}>
+              <span className="skeleton" style={{ width: j === 0 ? '60%' : j % 2 === 0 ? '80%' : '45%', display: 'block' }} />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </>
+  );
+}
+
+export function DataTable<T>({ columns, data, loading, searchable = true, onRowClick, actions }: Props<T>) {
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
     if (!search.trim()) return data;
     const q = search.toLowerCase();
-    return data.filter((item) =>
-      columns.some((col) => {
-        const val = (item as Record<string, unknown>)[col.key];
-        return String(val ?? '').toLowerCase().includes(q);
-      })
+    return data.filter(item =>
+      columns.some(col => String((item as Record<string, unknown>)[col.key] ?? '').toLowerCase().includes(q))
     );
   }, [data, columns, search]);
 
-  if (loading) {
-    return (
-      <div className="table-wrap">
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 220 }}>
-          <Spinner animation="border" style={{ color: 'var(--accent)', width: 28, height: 28, borderWidth: 2 }} />
-        </div>
-      </div>
-    );
-  }
+  const colCount = columns.length + (actions ? 1 : 0);
 
   return (
     <div className="table-wrap">
-      {searchable && data.length > 0 && (
+      {searchable && (
         <div className="datatable-toolbar">
-          <div style={{ position: 'relative' }}>
-            <BsSearch
-              size={12}
-              style={{
-                position: 'absolute',
-                left: 9,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'var(--text-muted)',
-                pointerEvents: 'none',
-              }}
-            />
+          <div className="search-wrap">
+            <BsSearch size={11} className="search-icon" />
             <input
               className="datatable-search-input"
-              placeholder="Search…"
+              placeholder="Search records…"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: 28 }}
+              onChange={e => setSearch(e.target.value)}
+              disabled={loading}
             />
           </div>
-          <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-            {filtered.length !== data.length
-              ? `${filtered.length} of ${data.length} records`
+          <span style={{ fontSize: 12, color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
+            {loading ? 'Loading…' : filtered.length !== data.length
+              ? `${filtered.length} of ${data.length}`
               : `${data.length} record${data.length !== 1 ? 's' : ''}`}
           </span>
         </div>
       )}
 
-      {filtered.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <BsInboxFill size={22} />
-          </div>
-          <p className="empty-state-text mb-0">
-            {search ? 'No results match your search' : 'No records found'}
-          </p>
-          {search && (
-            <p className="empty-state-sub mb-0">Try a different search term</p>
-          )}
-        </div>
-      ) : (
-        <Table hover responsive className="mb-0">
-          <thead>
+      <Table hover responsive className="mb-0">
+        <thead>
+          <tr>
+            {columns.map(col => <th key={col.key}>{col.label}</th>)}
+            {actions && <th style={{ width: 1 }}>Actions</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
+            <SkeletonRows cols={colCount} />
+          ) : filtered.length === 0 ? (
             <tr>
-              {columns.map((col) => (
-                <th key={col.key}>{col.label}</th>
-              ))}
-              {actions && <th style={{ width: 1, whiteSpace: 'nowrap' }}>Actions</th>}
+              <td colSpan={colCount}>
+                <div className="empty-state">
+                  <BsInbox size={32} />
+                  <p className="empty-state-title">
+                    {search ? 'No results found' : 'No records yet'}
+                  </p>
+                  {search && <p className="empty-state-sub">Try adjusting your search</p>}
+                </div>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {filtered.map((item, index) => (
+          ) : (
+            filtered.map((item, i) => (
               <tr
-                key={getRowKey(item, index)}
+                key={rowKey(item, i)}
                 onClick={() => onRowClick?.(item)}
                 style={onRowClick ? { cursor: 'pointer' } : undefined}
               >
-                {columns.map((col) => (
+                {columns.map(col => (
                   <td key={col.key}>
                     {col.render
                       ? col.render(item)
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      : String(((item as any)[col.key]) ?? '')}
+                      : String((item as any)[col.key] ?? '')}
                   </td>
                 ))}
                 {actions && (
                   <td style={{ whiteSpace: 'nowrap' }}>
-                    <div className="d-flex gap-1">{actions(item)}</div>
+                    <div style={{ display: 'flex', gap: 4 }}>{actions(item)}</div>
                   </td>
                 )}
               </tr>
-            ))}
-          </tbody>
-        </Table>
-      )}
+            ))
+          )}
+        </tbody>
+      </Table>
     </div>
   );
 }

@@ -1,178 +1,132 @@
 import { useState, useEffect } from 'react';
-import { Modal, Form, Button } from 'react-bootstrap';
-import { BsPencil, BsTrash, BsCheck, BsX, BsPlus } from 'react-icons/bs';
+import { Modal } from 'react-bootstrap';
+import { BsPencil, BsTrash, BsToggleOn, BsToggleOff } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { userService } from '@/services/user.service';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { DataTable } from '@/components/ui/DataTable';
-import type { Column } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { formatEnum } from '@/utils/formatters';
 import { Status } from '@/types/enums';
+import type { Column } from '@/components/ui/DataTable';
 import type { User } from '@/types/academic.types';
+
+type ModalMode = 'edit' | 'delete' | null;
 
 export default function UserList() {
   const [items, setItems] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editItem, setEditItem] = useState<User | null>(null);
+  const [modal, setModal] = useState<ModalMode>(null);
+  const [selected, setSelected] = useState<User | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [status, setStatus] = useState<Status>('ACTIVE' as Status);
+  const [status, setStatus] = useState<Status>(Status.ACTIVE);
 
-  const fetchData = async () => {
+  const load = async () => {
+    try { setLoading(true); setItems(await userService.getAll()); }
+    catch { toast.error('Failed to load users'); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const openEdit = (item: User) => { setSelected(item); setName(item.name); setPhone(item.phone); setStatus(item.status); setModal('edit'); };
+
+  const handleSave = async () => {
+    if (!selected) return;
+    setSaving(true);
     try {
-      setLoading(true);
-      setItems(await userService.getAll());
-    } catch {
-      toast.error('Failed to load users');
-    } finally {
-      setLoading(false);
-    }
+      await userService.update(selected.id, { name, phone, status, roles: selected.roles });
+      toast.success('User updated'); setModal(null); load();
+    } catch { toast.error('Failed to update user'); }
+    finally { setSaving(false); }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const openCreate = () => {
-    setEditItem(null);
-    setName('');
-    setEmail('');
-    setPhone('');
-    setStatus('ACTIVE' as Status);
-    setShowModal(true);
-  };
-
-  const openEdit = (item: User) => {
-    setEditItem(item);
-    setName(item.name);
-    setEmail(item.email);
-    setPhone(item.phone);
-    setStatus(item.status);
-    setShowModal(true);
-  };
-
-  const handleSubmit = async () => {
+  const handleToggle = async (item: User) => {
     try {
-      if (editItem) {
-        await userService.update(editItem.id, { name, phone, status, roles: editItem.roles });
-        toast.success('User updated');
-      }
-      setShowModal(false);
-      fetchData();
-    } catch {
-      toast.error('Failed to save user');
-    }
+      await userService.toggleStatus(item.id, item.status === 'ACTIVE' ? Status.INACTIVE : Status.ACTIVE);
+      toast.success('Status toggled'); load();
+    } catch { toast.error('Failed to toggle status'); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure?')) return;
-    try {
-      await userService.delete(id);
-      toast.success('User deleted');
-      fetchData();
-    } catch {
-      toast.error('Failed to delete user');
-    }
-  };
-
-  const handleToggleStatus = async (item: User) => {
-    try {
-      const newStatus = item.status === 'ACTIVE' ? 'INACTIVE' as Status : 'ACTIVE' as Status;
-      await userService.toggleStatus(item.id, newStatus);
-      toast.success('Status toggled');
-      fetchData();
-    } catch {
-      toast.error('Failed to toggle status');
-    }
+  const handleDelete = async () => {
+    if (!selected) return;
+    setSaving(true);
+    try { await userService.delete(selected.id); toast.success('User deleted'); setModal(null); load(); }
+    catch { toast.error('Failed to delete user'); }
+    finally { setSaving(false); }
   };
 
   const columns: Column<User>[] = [
-    { key: 'name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Phone' },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item) => <StatusBadge status={item.status} />,
-    },
-    {
-      key: 'roles',
-      label: 'Roles',
-      render: (item) => item.roles?.join(', ') || '-',
-    },
+    { key: 'name',   label: 'Name' },
+    { key: 'email',  label: 'Email' },
+    { key: 'phone',  label: 'Phone' },
+    { key: 'roles',  label: 'Roles', render: item => item.roles?.map(r => formatEnum(r)).join(', ') || '—' },
+    { key: 'status', label: 'Status', render: item => <StatusBadge status={item.status} /> },
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Users"
-        subtitle="Manage system users"
-        action={
-          <Button variant="primary" size="sm" onClick={openCreate}>
-            <BsPlus className="me-1" /> Add New
-          </Button>
-        }
-      />
-
-      <DataTable
-        columns={columns}
-        data={items}
-        loading={loading}
-        actions={(item) => (
-          <div className="d-flex gap-1">
-            <Button variant="outline-primary" size="sm" onClick={() => openEdit(item)}>
-              <BsPencil />
-            </Button>
-            <Button
-              variant={item.status === 'ACTIVE' ? 'outline-warning' : 'outline-success'}
-              size="sm"
-              onClick={() => handleToggleStatus(item)}
-              title="Toggle Status"
+    <>
+      <PageHeader title="Users" subtitle="Manage system accounts and access" />
+      <DataTable columns={columns} data={items} loading={loading}
+        actions={item => (
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
+            <button
+              className={`icon-btn ${item.status === 'ACTIVE' ? 'icon-btn-warn' : 'icon-btn-success'}`}
+              onClick={() => handleToggle(item)}
+              title={item.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
             >
-              {item.status === 'ACTIVE' ? <BsX /> : <BsCheck />}
-            </Button>
-            <Button variant="outline-danger" size="sm" onClick={() => handleDelete(item.id)}>
-              <BsTrash />
-            </Button>
+              {item.status === 'ACTIVE' ? <BsToggleOn size={15} /> : <BsToggleOff size={15} />}
+            </button>
+            <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
           </div>
         )}
       />
 
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{editItem ? 'Edit User' : 'User Details'}</Modal.Title>
-        </Modal.Header>
+      <Modal show={modal === 'edit'} onHide={() => setModal(null)}>
+        <Modal.Header closeButton><Modal.Title>Edit User</Modal.Title></Modal.Header>
         <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Name</Form.Label>
-              <Form.Control value={name} onChange={(e) => setName(e.target.value)} />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
-              <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Phone</Form.Label>
-              <Form.Control value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Status</Form.Label>
-              <Form.Select value={status} onChange={(e) => setStatus(e.target.value as Status)}>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="INACTIVE">INACTIVE</option>
-              </Form.Select>
-            </Form.Group>
-          </Form>
+          <div style={{ marginBottom: 14 }}>
+            <label className="form-label">Name</label>
+            <input className="form-control" value={name} onChange={e => setName(e.target.value)} />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label className="form-label">Email (read-only)</label>
+            <input className="form-control" value={selected?.email ?? ''} readOnly style={{ opacity: 0.6 }} />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label className="form-label">Phone</label>
+            <input className="form-control" value={phone} onChange={e => setPhone(e.target.value)} />
+          </div>
+          <div>
+            <label className="form-label">Status</label>
+            <select className="form-select" value={status} onChange={e => setStatus(e.target.value as Status)}>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit}>Save</Button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
+            {saving && <span className="spinner-border spinner-border-sm me-2" />}Save
+          </button>
         </Modal.Footer>
       </Modal>
-    </div>
+
+      <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
+        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
+          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete "{selected?.name}"?</p>
+          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This action is permanent.</p>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+            <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
+          </div>
+        </Modal.Body>
+      </Modal>
+    </>
   );
 }

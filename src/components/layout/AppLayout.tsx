@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { TopNavbar } from '@/components/layout/TopNavbar';
+import { Sidebar } from './Sidebar';
+import { TopNavbar } from './TopNavbar';
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
-  const sidebarW = collapsed ? 64 : 248;
+  const sidebarW = collapsed ? 56 : 252;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar collapsed={collapsed} width={sidebarW} />
-
-      <div style={{ marginLeft: sidebarW, flex: 1, transition: 'margin-left 0.25s', minWidth: 0 }}>
+      <div style={{ marginLeft: sidebarW, flex: 1, transition: 'margin-left 0.2s ease', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <TopNavbar onToggleSidebar={() => setCollapsed(c => !c)} />
         <main className="page-content">
           <Outlet />

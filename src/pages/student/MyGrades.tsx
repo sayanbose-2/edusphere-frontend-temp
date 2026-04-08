@@ -17,63 +17,39 @@ export default function MyGrades() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const load = async () => {
       try {
-        setLoading(true);
         const gradeData = await gradeService.getMy();
         setGrades(gradeData);
-
-        const uniqueExamIds = [...new Set(gradeData.map((g) => g.examId))];
-        const examData = await Promise.all(uniqueExamIds.map((id) => examService.getById(id)));
+        const uniqueExamIds = [...new Set(gradeData.map(g => g.examId))];
+        const examData = await Promise.all(uniqueExamIds.map(id => examService.getById(id)));
         setExams(examData);
-
-        const uniqueCourseIds = [...new Set(examData.map((e) => e.courseId))];
-        const courseData = await Promise.all(uniqueCourseIds.map((id) => courseService.getById(id)));
+        const uniqueCourseIds = [...new Set(examData.map(e => e.courseId))];
+        const courseData = await Promise.all(uniqueCourseIds.map(id => courseService.getById(id)));
         setCourses(courseData);
-      } catch {
-        toast.error('Failed to load grades');
-      } finally {
-        setLoading(false);
-      }
+      } catch { toast.error('Failed to load grades'); }
+      finally { setLoading(false); }
     };
-
-    fetchData();
+    load();
   }, []);
 
-  const getExamLabel = (id: string) => {
-    const exam = exams.find((e) => e.id === id);
-    if (!exam) return '—';
-    const course = courses.find((c) => c.id === exam.courseId);
-    return `${course?.title || '—'} — ${formatEnum(exam.type)}`;
+  const examLabel = (id: string) => {
+    const e = exams.find(x => x.id === id);
+    if (!e) return '—';
+    return `${courses.find(c => c.id === e.courseId)?.title || '—'} — ${formatEnum(e.type)}`;
   };
 
   const columns: Column<Grade>[] = [
-    {
-      key: 'examId',
-      label: 'Exam',
-      render: (item) => getExamLabel(item.examId),
-    },
-    { key: 'score', label: 'Score' },
-    { key: 'grade', label: 'Grade' },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item) => <StatusBadge status={item.status} />,
-    },
+    { key: 'examId', label: 'Exam',   render: item => examLabel(item.examId) },
+    { key: 'score',  label: 'Score' },
+    { key: 'grade',  label: 'Grade' },
+    { key: 'status', label: 'Status', render: item => <StatusBadge status={item.status} /> },
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="My Grades"
-        subtitle="View your exam grades and results"
-      />
-
-      <DataTable
-        columns={columns}
-        data={grades}
-        loading={loading}
-      />
-    </div>
+    <>
+      <PageHeader title="My Grades" subtitle="View your exam grades and results" />
+      <DataTable columns={columns} data={grades} loading={loading} />
+    </>
   );
 }

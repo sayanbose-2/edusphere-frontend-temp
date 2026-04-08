@@ -16,6 +16,16 @@ export default defineConfig({
         target: 'http://localhost:9086',
         changeOrigin: true,
         secure: false,
+        // Required for SSE (Server-Sent Events) to work through the dev proxy.
+        // Without this, the proxy buffers the response and events are never forwarded.
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes) => {
+            if (proxyRes.headers['content-type']?.includes('text/event-stream')) {
+              proxyRes.headers['x-accel-buffering'] = 'no';
+              proxyRes.headers['cache-control'] = 'no-cache';
+            }
+          });
+        },
       },
     },
   },

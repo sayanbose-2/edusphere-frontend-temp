@@ -1,427 +1,176 @@
 import { useState, useEffect } from 'react';
-import { Modal, Form, Button, Badge } from 'react-bootstrap';
-import { BsPencil, BsTrash, BsPlus, BsDash, BsFileEarmarkBarGraph } from 'react-icons/bs';
+import { Modal } from 'react-bootstrap';
+import { BsPencil, BsTrash, BsPlus, BsDashCircle } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { departmentService } from '@/services/department.service';
 import { reportService } from '@/services/report.service';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { DataTable } from '@/components/ui/DataTable';
-import type { Column } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useAuth } from '@/contexts/AuthContext';
-import { Status } from '@/types/enums';
+import { Status, ReportScope } from '@/types/enums';
+import { formatEnum } from '@/utils/formatters';
+import type { Column } from '@/components/ui/DataTable';
 import type { Department } from '@/types/academic.types';
 import type { Report, CreateReportRequest } from '@/types/compliance.types';
 
+type ModalMode = 'create' | 'edit' | 'delete' | null;
 type MetricRow = { key: string; value: string };
 
-const SCOPE_LABELS: Record<string, string> = {
-  STUDENT_PERFORMANCE: 'Student Performance',
-  FACULTY_WORKLOAD: 'Faculty Workload',
-  DEPARTMENT_OVERVIEW: 'Department Overview',
-  COURSE_ANALYTICS: 'Course Analytics',
-  EXAM_RESULTS: 'Exam Results',
-  THESIS_STATUS: 'Thesis Status',
-  RESEARCH_PROGRESS: 'Research Progress',
-  COMPLIANCE_SUMMARY: 'Compliance Summary',
-  AUDIT_SUMMARY: 'Audit Summary',
-};
-
-const SCOPE_COLORS: Record<string, string> = {
-  STUDENT_PERFORMANCE: '#3b82f6',
-  FACULTY_WORKLOAD: '#8b5cf6',
-  DEPARTMENT_OVERVIEW: '#0ea5e9',
-  COURSE_ANALYTICS: '#f59e0b',
-  EXAM_RESULTS: '#ef4444',
-  THESIS_STATUS: '#10b981',
-  RESEARCH_PROGRESS: '#6366f1',
-  COMPLIANCE_SUMMARY: '#f97316',
-  AUDIT_SUMMARY: '#14b8a6',
-};
-
 const parseMetrics = (json: string): MetricRow[] => {
-  try {
-    const obj = JSON.parse(json);
-    if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-      return Object.entries(obj).map(([key, value]) => ({ key, value: String(value) }));
-    }
-  } catch {
-    // ignore
-  }
+  try { const o = JSON.parse(json); if (o && typeof o === 'object') return Object.entries(o).map(([k, v]) => ({ key: k, value: String(v) })); } catch {}
   return [{ key: '', value: '' }];
 };
-
-const serializeMetrics = (rows: MetricRow[]): string => {
-  const obj: Record<string, string> = {};
-  rows.forEach(({ key, value }) => {
-    if (key.trim()) obj[key.trim()] = value;
-  });
-  return JSON.stringify(obj);
-};
+const serializeMetrics = (rows: MetricRow[]) => JSON.stringify(Object.fromEntries(rows.filter(r => r.key.trim()).map(r => [r.key.trim(), r.value])));
 
 export default function ReportCRUD() {
   const { user } = useAuth();
   const [items, setItems] = useState<Report[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editItem, setEditItem] = useState<Report | null>(null);
+  const [modal, setModal] = useState<ModalMode>(null);
+  const [selected, setSelected] = useState<Report | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [departmentId, setDepartmentId] = useState('');
   const [scope, setScope] = useState('');
   const [metricRows, setMetricRows] = useState<MetricRow[]>([{ key: '', value: '' }]);
-  const [status, setStatus] = useState<Status>('ACTIVE' as Status);
+  const [status, setStatus] = useState<Status>(Status.ACTIVE);
 
-  const fetchData = async () => {
+  const load = async () => {
     try {
       setLoading(true);
-      const [reportData, deptData] = await Promise.all([
-        reportService.getAll(),
-        departmentService.getAll(),
-      ]);
-      setItems(reportData);
-      setDepartments(deptData);
-    } catch {
-      toast.error('Failed to load reports');
-    } finally {
-      setLoading(false);
-    }
+      const [r, d] = await Promise.all([reportService.getAll(), departmentService.getAll()]);
+      setItems(r); setDepartments(d);
+    } catch { toast.error('Failed to load reports'); }
+    finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { load(); }, []);
 
-  const openCreate = () => {
-    setEditItem(null);
-    setDepartmentId('');
-    setScope('');
-    setMetricRows([{ key: '', value: '' }]);
-    setStatus('ACTIVE' as Status);
-    setShowModal(true);
-  };
+  const openCreate = () => { setSelected(null); setDepartmentId(''); setScope(''); setMetricRows([{ key: '', value: '' }]); setStatus(Status.ACTIVE); setModal('create'); };
+  const openEdit = (item: Report) => { setSelected(item); setDepartmentId(String(item.department || '')); setScope(item.scope); setMetricRows(parseMetrics(item.metrics)); setStatus(item.status); setModal('edit'); };
 
-  const openEdit = (item: Report) => {
-    setEditItem(item);
-    setDepartmentId(item.department as string || '');
-    setScope(item.scope);
-    setMetricRows(parseMetrics(item.metrics));
-    setStatus(item.status);
-    setShowModal(true);
-  };
-
-  const handleSubmit = async () => {
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      const payload: CreateReportRequest = {
-        generatedBy: user?.id || '',
-        departmentId,
-        scope: scope as import('@/types/enums').ReportScope,
-        metrics: serializeMetrics(metricRows),
-        status,
-      };
-      if (editItem) {
-        await reportService.update(editItem.id, payload);
-        toast.success('Report updated');
-      } else {
-        await reportService.create(payload);
-        toast.success('Report created');
-      }
-      setShowModal(false);
-      fetchData();
-    } catch {
-      toast.error('Failed to save report');
-    }
+      const payload: CreateReportRequest = { generatedBy: user?.id || '', departmentId, scope: scope as ReportScope, metrics: serializeMetrics(metricRows), status };
+      if (modal === 'edit' && selected) { await reportService.update(selected.id, payload); toast.success('Report updated'); }
+      else { await reportService.create(payload); toast.success('Report created'); }
+      setModal(null); load();
+    } catch { toast.error('Failed to save report'); }
+    finally { setSaving(false); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure?')) return;
-    try {
-      await reportService.delete(id);
-      toast.success('Report deleted');
-      fetchData();
-    } catch {
-      toast.error('Failed to delete report');
-    }
+  const handleDelete = async () => {
+    if (!selected) return;
+    setSaving(true);
+    try { await reportService.delete(selected.id); toast.success('Report deleted'); setModal(null); load(); }
+    catch { toast.error('Failed to delete report'); }
+    finally { setSaving(false); }
   };
 
-  const getDepartmentName = (id: string) =>
-    departments.find((d) => d.id === id)?.departmentName ?? '-';
-
-  const updateRow = (idx: number, field: keyof MetricRow, val: string) => {
-    const updated = [...metricRows];
-    updated[idx] = { ...updated[idx], [field]: val };
-    setMetricRows(updated);
-  };
+  const deptName = (id: string) => departments.find(d => d.id === id)?.departmentName ?? '—';
+  const updRow = (i: number, f: keyof MetricRow, v: string) => setMetricRows(r => r.map((x, idx) => idx === i ? { ...x, [f]: v } : x));
 
   const renderMetrics = (json: string) => {
     try {
-      const obj = JSON.parse(json);
-      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-        const entries = Object.entries(obj);
-        if (entries.length === 0) return <span className="text-muted fst-italic">No metrics</span>;
-        return (
-          <div className="d-flex flex-wrap gap-1">
-            {entries.map(([k, v]) => (
-              <span
-                key={k}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '3px 8px',
-                  borderRadius: '6px',
-                  fontSize: '0.75rem',
-                  background: 'var(--bg-raised)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border)',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
-                <span style={{ color: 'var(--text-secondary)', margin: '0 1px' }}>·</span>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{String(v)}</span>
-              </span>
-            ))}
+      const o = JSON.parse(json);
+      if (o && typeof o === 'object') {
+        const entries = Object.entries(o);
+        return entries.length ? (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {entries.map(([k, v]) => <span key={k} style={{ fontSize: 11, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 8px', color: 'var(--text-2)' }}>{k}: <strong style={{ color: 'var(--text)' }}>{String(v)}</strong></span>)}
           </div>
-        );
+        ) : <span style={{ color: 'var(--text-3)' }}>—</span>;
       }
-    } catch {
-      // ignore
-    }
-    return <span className="text-muted fst-italic">—</span>;
-  };
-
-  const renderScope = (scopeVal: string) => {
-    const color = SCOPE_COLORS[scopeVal] ?? '#6b7280';
-    const label = SCOPE_LABELS[scopeVal] ?? scopeVal;
-    return (
-      <span
-        style={{
-          display: 'inline-block',
-          padding: '3px 10px',
-          borderRadius: '20px',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          background: `${color}18`,
-          color,
-          border: `1px solid ${color}40`,
-        }}
-      >
-        {label}
-      </span>
-    );
+    } catch {}
+    return <span style={{ color: 'var(--text-3)' }}>—</span>;
   };
 
   const columns: Column<Report>[] = [
-    {
-      key: 'scope',
-      label: 'Scope',
-      render: (item) => renderScope(item.scope),
-    },
-    {
-      key: 'department',
-      label: 'Department',
-      render: (item) => getDepartmentName(item.department as string),
-    },
-    {
-      key: 'generatedBy',
-      label: 'Generated By',
-      render: (item) => {
-        const g = item.generatedBy;
-        if (g && typeof g === 'object' && 'name' in g) return g.name;
-        return String(g || '-');
-      },
-    },
-    {
-      key: 'metrics',
-      label: 'Metrics',
-      render: (item) => renderMetrics(item.metrics),
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item) => <StatusBadge status={item.status} />,
-    },
+    { key: 'scope',       label: 'Scope',      render: item => formatEnum(item.scope) },
+    { key: 'department',  label: 'Department', render: item => deptName(String(item.department || '')) },
+    { key: 'generatedBy', label: 'Generated By', render: item => { const g = item.generatedBy; return g && typeof g === 'object' && 'name' in g ? (g as { name: string }).name : String(g || '—'); } },
+    { key: 'metrics',     label: 'Metrics',    render: item => renderMetrics(item.metrics) },
+    { key: 'status',      label: 'Status',     render: item => <StatusBadge status={item.status} /> },
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Reports"
-        subtitle="Manage reports"
-        action={
-          <Button variant="primary" size="sm" onClick={openCreate}>
-            <BsPlus className="me-1" /> Add New
-          </Button>
-        }
+    <>
+      <PageHeader title="Reports" subtitle="Generate and manage institutional reports"
+        action={<button className="btn btn-primary btn-sm" onClick={openCreate}><BsPlus className="me-1" />New Report</button>}
       />
-
-      <DataTable
-        columns={columns}
-        data={items}
-        loading={loading}
-        actions={(item) => (
-          <div className="d-flex gap-1">
-            <Button variant="outline-primary" size="sm" onClick={() => openEdit(item)}>
-              <BsPencil />
-            </Button>
-            <Button variant="outline-danger" size="sm" onClick={() => handleDelete(item.id)}>
-              <BsTrash />
-            </Button>
+      <DataTable columns={columns} data={items} loading={loading}
+        actions={item => (
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
+            <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
           </div>
         )}
       />
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header
-          closeButton
-          style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)', color: '#fff' }}
-        >
-          <Modal.Title className="d-flex align-items-center gap-2" style={{ fontSize: '1rem' }}>
-            <BsFileEarmarkBarGraph size={18} />
-            {editItem ? 'Edit Report' : 'Create Report'}
-          </Modal.Title>
-        </Modal.Header>
-
-        <Modal.Body style={{ background: '#f8fafc', padding: '1.5rem' }}>
-          <Form>
-            {/* Row 1: Scope + Department */}
-            <div className="row g-3 mb-3">
-              <div className="col-md-6">
-                <Form.Label className="fw-semibold" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Report Scope
-                </Form.Label>
-                <Form.Select
-                  value={scope}
-                  onChange={(e) => setScope(e.target.value)}
-                  style={{ borderRadius: '8px', fontSize: '0.9rem' }}
-                >
-                  <option value="">Select scope…</option>
-                  {Object.entries(SCOPE_LABELS).map(([val, label]) => (
-                    <option key={val} value={val}>{label}</option>
-                  ))}
-                </Form.Select>
-              </div>
-              <div className="col-md-6">
-                <Form.Label className="fw-semibold" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Department
-                </Form.Label>
-                <Form.Select
-                  value={departmentId}
-                  onChange={(e) => setDepartmentId(e.target.value)}
-                  style={{ borderRadius: '8px', fontSize: '0.9rem' }}
-                >
-                  <option value="">Select department…</option>
-                  {departments.map((d) => (
-                    <option key={d.id} value={d.id}>{d.departmentName}</option>
-                  ))}
-                </Form.Select>
-              </div>
-            </div>
-
-            {/* Metrics builder */}
-            <div
-              className="mb-3 p-3"
-              style={{ background: 'var(--bg-raised)', borderRadius: '10px', border: '1px solid var(--border)' }}
-            >
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <Form.Label className="fw-semibold mb-0" style={{ fontSize: '0.85rem', color: '#374151' }}>
-                  Metrics
-                </Form.Label>
-                <Badge bg="secondary" style={{ fontSize: '0.72rem' }}>
-                  {metricRows.filter(r => r.key.trim()).length} entries
-                </Badge>
-              </div>
-
-              {/* Header row */}
-              <div className="row g-2 mb-1 px-1">
-                <div className="col">
-                  <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Metric Name
-                  </span>
-                </div>
-                <div className="col">
-                  <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Value
-                  </span>
-                </div>
-                <div style={{ width: '42px' }} />
-              </div>
-
-              {metricRows.map((row, idx) => (
-                <div key={idx} className="row g-2 mb-2 align-items-center">
-                  <div className="col">
-                    <Form.Control
-                      placeholder="e.g. pass_rate"
-                      value={row.key}
-                      onChange={(e) => updateRow(idx, 'key', e.target.value)}
-                      style={{ borderRadius: '8px', fontSize: '0.88rem', borderColor: '#d1d5db' }}
-                    />
-                  </div>
-                  <div className="col">
-                    <Form.Control
-                      placeholder="e.g. 87%"
-                      value={row.value}
-                      onChange={(e) => updateRow(idx, 'value', e.target.value)}
-                      style={{ borderRadius: '8px', fontSize: '0.88rem', borderColor: '#d1d5db' }}
-                    />
-                  </div>
-                  <div style={{ width: '42px' }}>
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      style={{ borderRadius: '8px', padding: '4px 8px' }}
-                      onClick={() => setMetricRows(metricRows.filter((_, i) => i !== idx))}
-                      disabled={metricRows.length === 1}
-                    >
-                      <BsDash />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-
-              <Button
-                variant="outline-primary"
-                size="sm"
-                style={{ borderRadius: '8px', fontSize: '0.82rem', marginTop: '4px' }}
-                onClick={() => setMetricRows([...metricRows, { key: '', value: '' }])}
-              >
-                <BsPlus className="me-1" /> Add Metric
-              </Button>
-            </div>
-
-            {/* Status */}
+      <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)} size="lg">
+        <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Report' : 'New Report'}</Modal.Title></Modal.Header>
+        <Modal.Body>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
             <div>
-              <Form.Label className="fw-semibold" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Status
-              </Form.Label>
-              <div className="d-flex gap-3">
-                {(['ACTIVE', 'INACTIVE'] as Status[]).map((s) => (
-                  <Form.Check
-                    key={s}
-                    type="radio"
-                    id={`status-${s}`}
-                    label={s}
-                    value={s}
-                    checked={status === s}
-                    onChange={() => setStatus(s)}
-                    style={{ fontSize: '0.9rem' }}
-                  />
-                ))}
-              </div>
+              <label className="form-label">Scope</label>
+              <select className="form-select" value={scope} onChange={e => setScope(e.target.value)}>
+                <option value="">Select scope</option>
+                {Object.values(ReportScope).map(s => <option key={s} value={s}>{formatEnum(s)}</option>)}
+              </select>
             </div>
-          </Form>
-        </Modal.Body>
+            <div>
+              <label className="form-label">Department</label>
+              <select className="form-select" value={departmentId} onChange={e => setDepartmentId(e.target.value)}>
+                <option value="">Select department</option>
+                {departments.map(d => <option key={d.id} value={d.id}>{d.departmentName}</option>)}
+              </select>
+            </div>
+          </div>
 
-        <Modal.Footer style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>
-          <Button variant="light" onClick={() => setShowModal(false)} style={{ borderRadius: '8px' }}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSubmit} style={{ borderRadius: '8px', minWidth: '90px' }}>
-            {editItem ? 'Update' : 'Create'}
-          </Button>
+          <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 16, marginBottom: 16, background: 'var(--bg)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>Metrics</span>
+              <span style={{ fontSize: 11, color: 'var(--text-2)' }}>{metricRows.filter(r => r.key.trim()).length} entries</span>
+            </div>
+            {metricRows.map((row, i) => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 32px', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                <input className="form-control" placeholder="Metric name" value={row.key} onChange={e => updRow(i, 'key', e.target.value)} />
+                <input className="form-control" placeholder="Value" value={row.value} onChange={e => updRow(i, 'value', e.target.value)} />
+                <button className="icon-btn icon-btn-danger" onClick={() => setMetricRows(r => r.filter((_, idx) => idx !== i))} disabled={metricRows.length === 1}><BsDashCircle size={13} /></button>
+              </div>
+            ))}
+            <button className="btn btn-secondary btn-sm" onClick={() => setMetricRows(r => [...r, { key: '', value: '' }])}><BsPlus className="me-1" />Add Metric</button>
+          </div>
+
+          <div>
+            <label className="form-label">Status</label>
+            <select className="form-select" value={status} onChange={e => setStatus(e.target.value as Status)}>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
+            {saving && <span className="spinner-border spinner-border-sm me-2" />}Save
+          </button>
         </Modal.Footer>
       </Modal>
-    </div>
+
+      <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
+        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
+          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete this report?</p>
+          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+            <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
+          </div>
+        </Modal.Body>
+      </Modal>
+    </>
   );
 }

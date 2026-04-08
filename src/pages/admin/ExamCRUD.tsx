@@ -1,175 +1,127 @@
 import { useState, useEffect } from 'react';
-import { Modal, Form, Button } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import { BsPencil, BsTrash, BsPlus } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { courseService } from '@/services/course.service';
 import { examService } from '@/services/exam.service';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { DataTable } from '@/components/ui/DataTable';
-import type { Column } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { ExamType, Status } from '@/types/enums';
+import { formatEnum } from '@/utils/formatters';
+import type { Column } from '@/components/ui/DataTable';
 import type { Exam, Course, CreateExamRequest } from '@/types/academic.types';
+
+type ModalMode = 'create' | 'edit' | 'delete' | null;
 
 export default function ExamCRUD() {
   const [items, setItems] = useState<Exam[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editItem, setEditItem] = useState<Exam | null>(null);
-
+  const [modal, setModal] = useState<ModalMode>(null);
+  const [selected, setSelected] = useState<Exam | null>(null);
+  const [saving, setSaving] = useState(false);
   const [courseId, setCourseId] = useState('');
-  const [type, setType] = useState<ExamType>('MIDTERM' as ExamType);
+  const [type, setType] = useState<ExamType>(ExamType.MIDTERM);
   const [date, setDate] = useState('');
 
-  const fetchData = async () => {
+  const load = async () => {
     try {
       setLoading(true);
-      const [examData, courseData] = await Promise.all([
-        examService.getAll(),
-        courseService.getAll(),
-      ]);
-      setItems(examData);
-      setCourses(courseData);
-    } catch {
-      toast.error('Failed to load exams');
-    } finally {
-      setLoading(false);
-    }
+      const [e, c] = await Promise.all([examService.getAll(), courseService.getAll()]);
+      setItems(e); setCourses(c);
+    } catch { toast.error('Failed to load exams'); }
+    finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { load(); }, []);
 
-  const openCreate = () => {
-    setEditItem(null);
-    setCourseId('');
-    setType('MIDTERM' as ExamType);
-    setDate('');
-    setShowModal(true);
-  };
+  const openCreate = () => { setSelected(null); setCourseId(''); setType(ExamType.MIDTERM); setDate(''); setModal('create'); };
+  const openEdit = (item: Exam) => { setSelected(item); setCourseId(item.courseId); setType(item.type); setDate(item.date); setModal('edit'); };
 
-  const openEdit = (item: Exam) => {
-    setEditItem(item);
-    setCourseId(item.courseId);
-    setType(item.type);
-    setDate(item.date);
-    setShowModal(true);
-  };
-
-  const handleSubmit = async () => {
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      const payload: CreateExamRequest = { courseId, type, date, status: 'ACTIVE' as Status };
-      if (editItem) {
-        await examService.update(editItem.id, payload);
-        toast.success('Exam updated');
-      } else {
-        await examService.create(payload);
-        toast.success('Exam created');
-      }
-      setShowModal(false);
-      fetchData();
-    } catch {
-      toast.error('Failed to save exam');
-    }
+      const payload: CreateExamRequest = { courseId, type, date, status: Status.ACTIVE };
+      if (modal === 'edit' && selected) { await examService.update(selected.id, payload); toast.success('Exam updated'); }
+      else { await examService.create(payload); toast.success('Exam created'); }
+      setModal(null); load();
+    } catch { toast.error('Failed to save exam'); }
+    finally { setSaving(false); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure?')) return;
-    try {
-      await examService.delete(id);
-      toast.success('Exam deleted');
-      fetchData();
-    } catch {
-      toast.error('Failed to delete exam');
-    }
+  const handleDelete = async () => {
+    if (!selected) return;
+    setSaving(true);
+    try { await examService.delete(selected.id); toast.success('Exam deleted'); setModal(null); load(); }
+    catch { toast.error('Failed to delete exam'); }
+    finally { setSaving(false); }
   };
 
-  const getCourseName = (id: string) => courses.find((c) => c.id === id)?.title || '—';
+  const courseName = (id: string) => courses.find(c => c.id === id)?.title ?? '—';
 
   const columns: Column<Exam>[] = [
-    {
-      key: 'courseId',
-      label: 'Course',
-      render: (item) => getCourseName(item.courseId),
-    },
-    {
-      key: 'type',
-      label: 'Type',
-      render: (item) => <StatusBadge status={item.type} />,
-    },
-    { key: 'date', label: 'Date' },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item) => <StatusBadge status={item.status} />,
-    },
+    { key: 'courseId', label: 'Course', render: item => courseName(item.courseId) },
+    { key: 'type',     label: 'Type',   render: item => <StatusBadge status={item.type} /> },
+    { key: 'date',     label: 'Date',   render: item => new Date(item.date).toLocaleDateString() },
+    { key: 'status',   label: 'Status', render: item => <StatusBadge status={item.status} /> },
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Exams"
-        subtitle="Manage examinations"
-        action={
-          <Button variant="primary" size="sm" onClick={openCreate}>
-            <BsPlus className="me-1" /> Add New
-          </Button>
-        }
+    <>
+      <PageHeader title="Exams" subtitle="Manage examinations and assessments"
+        action={<button className="btn btn-primary btn-sm" onClick={openCreate}><BsPlus className="me-1" />Add Exam</button>}
       />
-
-      <DataTable
-        columns={columns}
-        data={items}
-        loading={loading}
-        actions={(item) => (
-          <div className="d-flex gap-1">
-            <Button variant="outline-primary" size="sm" onClick={() => openEdit(item)}>
-              <BsPencil />
-            </Button>
-            <Button variant="outline-danger" size="sm" onClick={() => handleDelete(item.id)}>
-              <BsTrash />
-            </Button>
+      <DataTable columns={columns} data={items} loading={loading}
+        actions={item => (
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
+            <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
           </div>
         )}
       />
 
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{editItem ? 'Edit Exam' : 'Create Exam'}</Modal.Title>
-        </Modal.Header>
+      <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)}>
+        <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Exam' : 'New Exam'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Course</Form.Label>
-              <Form.Select value={courseId} onChange={(e) => setCourseId(e.target.value)}>
-                <option value="">Select Course</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>{c.title}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Type</Form.Label>
-              <Form.Select value={type} onChange={(e) => setType(e.target.value as ExamType)}>
-                <option value="MIDTERM">MIDTERM</option>
-                <option value="FINAL">FINAL</option>
-                <option value="QUIZ">QUIZ</option>
-                <option value="ASSIGNMENT">ASSIGNMENT</option>
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Date</Form.Label>
-              <Form.Control type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </Form.Group>
-          </Form>
+          <div style={{ marginBottom: 14 }}>
+            <label className="form-label">Course</label>
+            <select className="form-select" value={courseId} onChange={e => setCourseId(e.target.value)}>
+              <option value="">Select course</option>
+              {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+            </select>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div>
+              <label className="form-label">Type</label>
+              <select className="form-select" value={type} onChange={e => setType(e.target.value as ExamType)}>
+                {Object.values(ExamType).map(t => <option key={t} value={t}>{formatEnum(t)}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Date</label>
+              <input type="date" className="form-control" value={date} onChange={e => setDate(e.target.value)} />
+            </div>
+          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit}>Save</Button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
+            {saving && <span className="spinner-border spinner-border-sm me-2" />}Save
+          </button>
         </Modal.Footer>
       </Modal>
-    </div>
+
+      <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
+        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
+          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete this exam?</p>
+          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+            <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
+          </div>
+        </Modal.Body>
+      </Modal>
+    </>
   );
 }

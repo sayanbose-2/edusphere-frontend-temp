@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal, Form, Button } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import { BsPlus, BsEye } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { departmentService } from '@/services/department.service';
@@ -12,213 +12,147 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Status } from '@/types/enums';
 import type { Department } from '@/types/academic.types';
 import type { Report, CreateReportRequest } from '@/types/compliance.types';
+import type { ReportScope } from '@/types/enums';
+
+type ModalMode = 'create' | 'view' | null;
 
 export default function CompReports() {
   const { user } = useAuth();
   const [items, setItems] = useState<Report[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [viewItem, setViewItem] = useState<Report | null>(null);
+  const [modal, setModal] = useState<ModalMode>(null);
+  const [selected, setSelected] = useState<Report | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [scope, setScope] = useState('');
   const [metrics, setMetrics] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [status, setStatus] = useState<Status>('ACTIVE' as Status);
 
-  const fetchData = async () => {
+  const load = async () => {
     try {
       setLoading(true);
-      const [reports, depts] = await Promise.all([
-        reportService.getAll(),
-        departmentService.getAll(),
-      ]);
-      setItems(reports);
-      setDepartments(depts);
-    } catch {
-      toast.error('Failed to load reports');
-    } finally {
-      setLoading(false);
-    }
+      const [reports, depts] = await Promise.all([reportService.getAll(), departmentService.getAll()]);
+      setItems(reports); setDepartments(depts);
+    } catch { toast.error('Failed to load reports'); }
+    finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { load(); }, []);
 
-  const openCreate = () => {
-    setScope('');
-    setMetrics('');
-    setDepartmentId('');
-    setStatus('ACTIVE' as Status);
-    setShowModal(true);
-  };
+  const openCreate = () => { setScope(''); setMetrics(''); setDepartmentId(''); setStatus('ACTIVE' as Status); setModal('create'); };
+  const openView   = (item: Report) => { setSelected(item); setModal('view'); };
 
-  const openView = (item: Report) => {
-    setViewItem(item);
-    setShowViewModal(true);
-  };
-
-  const handleSubmit = async () => {
+  const handleCreate = async () => {
+    setSaving(true);
     try {
       const payload: CreateReportRequest = {
         generatedBy: user?.id || '',
-        departmentId,
-        scope: scope as import('@/types/enums').ReportScope,
-        metrics,
-        status,
+        departmentId, scope: scope as ReportScope, metrics, status,
       };
       await reportService.create(payload);
-      toast.success('Report created');
-      setShowModal(false);
-      fetchData();
-    } catch {
-      toast.error('Failed to create report');
-    }
+      toast.success('Report created'); setModal(null); load();
+    } catch { toast.error('Failed to create report'); }
+    finally { setSaving(false); }
   };
 
   const columns: Column<Report>[] = [
-    { key: 'scope', label: 'Scope' },
-    {
-      key: 'department',
-      label: 'Department',
-      render: (item) => String(item.department || '-'),
-    },
-    {
-      key: 'metrics',
-      label: 'Metrics',
-      render: (item) =>
-        item.metrics.length > 60
-          ? item.metrics.substring(0, 60) + '...'
-          : item.metrics,
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item) => <StatusBadge status={item.status} />,
-    },
+    { key: 'scope',      label: 'Scope' },
+    { key: 'department', label: 'Department', render: item => String(item.department || '—') },
+    { key: 'metrics',    label: 'Metrics',    render: item => item.metrics.length > 60 ? item.metrics.slice(0, 60) + '…' : item.metrics },
+    { key: 'status',     label: 'Status',     render: item => <StatusBadge status={item.status} /> },
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Reports"
-        subtitle="View and create reports"
-        action={
-          <Button variant="primary" size="sm" onClick={openCreate}>
-            <BsPlus className="me-1" /> Create Report
-          </Button>
-        }
+    <>
+      <PageHeader title="Reports" subtitle="View and create reports"
+        action={<button className="btn btn-primary btn-sm" onClick={openCreate}><BsPlus className="me-1" />Create Report</button>}
       />
-
-      <DataTable
-        columns={columns}
-        data={items}
-        loading={loading}
-        actions={(item) => (
-          <div className="d-flex gap-1">
-            <Button
-              variant="outline-info"
-              size="sm"
-              onClick={() => openView(item)}
-              title="View"
-            >
-              <BsEye />
-            </Button>
-          </div>
+      <DataTable columns={columns} data={items} loading={loading}
+        actions={item => (
+          <button className="icon-btn" onClick={() => openView(item)} title="View"><BsEye size={13} /></button>
         )}
       />
 
-      {/* View Report Modal */}
-      <Modal show={showViewModal} onHide={() => setShowViewModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Report Details</Modal.Title>
-        </Modal.Header>
+      <Modal show={modal === 'view'} onHide={() => setModal(null)} size="lg">
+        <Modal.Header closeButton><Modal.Title>Report Details</Modal.Title></Modal.Header>
         <Modal.Body>
-          {viewItem && (
+          {selected && (
             <div>
-              <div className="mb-3">
-                <strong>Scope:</strong> {viewItem.scope}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Scope</div>
+                  <div style={{ fontSize: 14 }}>{selected.scope}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Department</div>
+                  <div style={{ fontSize: 14 }}>{String(selected.department || '—')}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Generated By</div>
+                  <div style={{ fontSize: 14 }}>{String(selected.generatedBy || '—')}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Status</div>
+                  <div><StatusBadge status={selected.status} /></div>
+                </div>
               </div>
-              <div className="mb-3">
-                <strong>Department:</strong> {String(viewItem.department || '-')}
-              </div>
-              <div className="mb-3">
-                <strong>Generated By:</strong> {String(viewItem.generatedBy || '-')}
-              </div>
-              <div className="mb-3">
-                <strong>Status:</strong> <StatusBadge status={viewItem.status} />
-              </div>
-              <div className="mb-3">
-                <strong>Metrics:</strong>
-                <div className="mt-1 p-3 rounded" style={{ background: 'var(--bg-raised)' }}>{viewItem.metrics}</div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Metrics</div>
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 14px', fontSize: 13, lineHeight: 1.6 }}>{selected.metrics}</div>
               </div>
             </div>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowViewModal(false)}>
-            Close
-          </Button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Close</button>
         </Modal.Footer>
       </Modal>
 
-      {/* Create Report Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Create Report</Modal.Title>
-        </Modal.Header>
+      <Modal show={modal === 'create'} onHide={() => setModal(null)} size="lg">
+        <Modal.Header closeButton><Modal.Title>Create Report</Modal.Title></Modal.Header>
         <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Scope</Form.Label>
-              <Form.Select value={scope} onChange={(e) => setScope(e.target.value)}>
-                <option value="">Select Scope</option>
-                <option value="DEPARTMENT">DEPARTMENT</option>
-                <option value="INSTITUTION">INSTITUTION</option>
-                <option value="FINANCIAL">FINANCIAL</option>
-                <option value="COMPLIANCE">COMPLIANCE</option>
-                <option value="ACADEMIC">ACADEMIC</option>
-                <option value="RESEARCH">RESEARCH</option>
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Metrics</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={5}
-                value={metrics}
-                onChange={(e) => setMetrics(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Department</Form.Label>
-              <Form.Select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
-                <option value="">Select Department</option>
-                {departments.map((department) => (
-                  <option key={department.id} value={department.id}>{department.departmentName}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Status</Form.Label>
-              <Form.Select value={status} onChange={(e) => setStatus(e.target.value as Status)}>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="INACTIVE">INACTIVE</option>
-              </Form.Select>
-            </Form.Group>
-          </Form>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+            <div>
+              <label className="form-label">Scope</label>
+              <select className="form-select" value={scope} onChange={e => setScope(e.target.value)}>
+                <option value="">Select scope</option>
+                <option value="DEPARTMENT">Department</option>
+                <option value="INSTITUTION">Institution</option>
+                <option value="FINANCIAL">Financial</option>
+                <option value="COMPLIANCE">Compliance</option>
+                <option value="ACADEMIC">Academic</option>
+                <option value="RESEARCH">Research</option>
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Department</label>
+              <select className="form-select" value={departmentId} onChange={e => setDepartmentId(e.target.value)}>
+                <option value="">Select department</option>
+                {departments.map(d => <option key={d.id} value={d.id}>{d.departmentName}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label className="form-label">Metrics</label>
+            <textarea className="form-control" rows={5} value={metrics} onChange={e => setMetrics(e.target.value)} />
+          </div>
+          <div>
+            <label className="form-label">Status</label>
+            <select className="form-select" value={status} onChange={e => setStatus(e.target.value as Status)}>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            Save
-          </Button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={handleCreate} disabled={saving}>
+            {saving && <span className="spinner-border spinner-border-sm me-2" />}Save
+          </button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </>
   );
 }

@@ -1,138 +1,109 @@
 import { useState, useEffect } from 'react';
-import { Form, Button, Card } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { notificationService } from '@/services/notification.service';
 import { userService } from '@/services/user.service';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { Role } from '@/types/enums';
+import { NotificationType, Role } from '@/types/enums';
+import { formatEnum } from '@/utils/formatters';
 import type { User } from '@/types/academic.types';
-import { NotificationType } from '@/types/enums';
 
-type TargetType = 'user' | 'role' | 'all';
+type Target = 'all' | 'user' | 'role';
 
 export default function NotificationSender() {
   const [users, setUsers] = useState<User[]>([]);
   const [message, setMessage] = useState('');
   const [category, setCategory] = useState<string>(NotificationType.ENROLLMENT);
-  const [targetType, setTargetType] = useState<TargetType>('all');
+  const [target, setTarget] = useState<Target>('all');
   const [userId, setUserId] = useState('');
-  const [role, setRole] = useState<string>('STUDENT');
+  const [role, setRole] = useState<string>(Role.STUDENT);
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setUsers(await userService.getAll());
-      } catch {
-        toast.error('Failed to load users');
-      }
-    };
-    fetchUsers();
+    userService.getAll().then(setUsers).catch(() => toast.error('Failed to load users'));
   }, []);
 
   const handleSend = async () => {
     if (!message.trim()) { toast.error('Message is required'); return; }
-    if (!category.trim()) { toast.error('Category is required'); return; }
-    if (targetType === 'user' && !userId) { toast.error('Please select a user'); return; }
-
+    if (target === 'user' && !userId) { toast.error('Select a user'); return; }
+    setSending(true);
     try {
-      setSending(true);
-      switch (targetType) {
-        case 'user':
-          await notificationService.sendToUser(userId, { userId, entityId: userId, message, category: category as NotificationType, isRead: false });
-          toast.success('Notification sent to user');
-          break;
-        case 'role':
-          await notificationService.sendToRole(role, { message, category: category as NotificationType });
-          toast.success(`Notification sent to all ${role}s`);
-          break;
-        case 'all':
-          await notificationService.broadcast({ message, category: category as NotificationType });
-          toast.success('Notification broadcast to all users');
-          break;
+      if (target === 'user') {
+        await notificationService.sendToUser(userId, { userId, entityId: userId, message, category: category as NotificationType, isRead: false });
+        toast.success('Notification sent to user');
+      } else if (target === 'role') {
+        await notificationService.sendToRole(role, { message, category: category as NotificationType });
+        toast.success(`Sent to all ${formatEnum(role)}s`);
+      } else {
+        await notificationService.broadcast({ message, category: category as NotificationType });
+        toast.success('Broadcast sent to all users');
       }
       setMessage('');
-      setCategory(NotificationType.ENROLLMENT);
-    } catch {
-      toast.error('Failed to send notification');
-    } finally {
-      setSending(false);
-    }
+    } catch { toast.error('Failed to send notification'); }
+    finally { setSending(false); }
   };
 
-  const roles: Role[] = ['STUDENT' as Role, 'FACULTY' as Role, 'ADMIN' as Role, 'DEPARTMENT_HEAD' as Role, 'COMPLIANCE_OFFICER' as Role, 'REGULATOR' as Role];
+  const tgtBtn = (val: Target, label: string) => (
+    <button
+      key={val}
+      onClick={() => setTarget(val)}
+      style={{
+        padding: '6px 16px', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+        border: `1px solid ${target === val ? 'var(--blue)' : 'var(--border)'}`,
+        background: target === val ? 'var(--blue-dim)' : 'transparent',
+        color: target === val ? 'var(--blue)' : 'var(--text-2)',
+      }}
+    >{label}</button>
+  );
 
   return (
-    <div>
-      <PageHeader
-        title="Send Notifications"
-        subtitle="Send notifications to users, roles, or broadcast to all"
-      />
+    <>
+      <PageHeader title="Send Notifications" subtitle="Broadcast messages to users, roles, or everyone" />
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '28px 32px', maxWidth: 560, boxShadow: 'var(--shadow)' }}>
+        <div style={{ marginBottom: 20 }}>
+          <label className="form-label">Target audience</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {tgtBtn('all',  'Broadcast All')}
+            {tgtBtn('user', 'Specific User')}
+            {tgtBtn('role', 'By Role')}
+          </div>
+        </div>
 
-      <Card>
-        <Card.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Target Type</Form.Label>
-              <Form.Select value={targetType} onChange={(e) => setTargetType(e.target.value as TargetType)}>
-                <option value="all">Broadcast to All</option>
-                <option value="user">Specific User</option>
-                <option value="role">By Role</option>
-              </Form.Select>
-            </Form.Group>
+        {target === 'user' && (
+          <div style={{ marginBottom: 16 }}>
+            <label className="form-label">Select User</label>
+            <select className="form-select" value={userId} onChange={e => setUserId(e.target.value)}>
+              <option value="">Select a user</option>
+              {users.map(u => <option key={u.id} value={u.id}>{u.name} — {u.email}</option>)}
+            </select>
+          </div>
+        )}
 
-            {targetType === 'user' && (
-              <Form.Group className="mb-3">
-                <Form.Label>Select User</Form.Label>
-                <Form.Select value={userId} onChange={(e) => setUserId(e.target.value)}>
-                  <option value="">Select User</option>
-                  {users.map((u) => (
-                    <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            )}
+        {target === 'role' && (
+          <div style={{ marginBottom: 16 }}>
+            <label className="form-label">Select Role</label>
+            <select className="form-select" value={role} onChange={e => setRole(e.target.value)}>
+              {Object.values(Role).map(r => <option key={r} value={r}>{formatEnum(r)}</option>)}
+            </select>
+          </div>
+        )}
 
-            {targetType === 'role' && (
-              <Form.Group className="mb-3">
-                <Form.Label>Select Role</Form.Label>
-                <Form.Select value={role} onChange={(e) => setRole(e.target.value)}>
-                  {roles.map((r) => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            )}
+        <div style={{ marginBottom: 16 }}>
+          <label className="form-label">Category</label>
+          <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
+            {Object.values(NotificationType).map(t => <option key={t} value={t}>{formatEnum(t)}</option>)}
+          </select>
+        </div>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Category</Form.Label>
-              <Form.Select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              >
-                {Object.values(NotificationType).map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
+        <div style={{ marginBottom: 24 }}>
+          <label className="form-label">Message</label>
+          <textarea className="form-control" rows={5} value={message} onChange={e => setMessage(e.target.value)} placeholder="Enter notification message…" />
+        </div>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Message</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={5}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Enter your notification message..."
-              />
-            </Form.Group>
-
-            <Button variant="primary" onClick={handleSend} disabled={sending}>
-              {sending ? 'Sending...' : 'Send Notification'}
-            </Button>
-          </Form>
-        </Card.Body>
-      </Card>
-    </div>
+        <button className="btn btn-primary" onClick={handleSend} disabled={sending} style={{ fontWeight: 600, padding: '9px 24px' }}>
+          {sending && <span className="spinner-border spinner-border-sm me-2" />}
+          {sending ? 'Sending…' : 'Send Notification'}
+        </button>
+      </div>
+    </>
   );
 }

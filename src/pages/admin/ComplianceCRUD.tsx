@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal, Form, Button } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import { BsPencil, BsTrash, BsPlus } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { complianceService } from '@/services/compliance.service';
@@ -14,283 +14,169 @@ import { researchService } from '@/services/research.service';
 import { documentService } from '@/services/document.service';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { DataTable } from '@/components/ui/DataTable';
-import type { Column } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatEnum } from '@/utils/formatters';
+import type { Column } from '@/components/ui/DataTable';
 import type { ComplianceRecord, CreateComplianceRecordRequest } from '@/types/compliance.types';
 import { ComplianceResult, ComplianceEntityType } from '@/types/enums';
-import { formatEnum } from '@/utils/formatters';
+
+type ModalMode = 'create' | 'edit' | 'delete' | null;
 
 export default function ComplianceCRUD() {
   const { user } = useAuth();
   const [items, setItems] = useState<ComplianceRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editItem, setEditItem] = useState<ComplianceRecord | null>(null);
+  const [modal, setModal] = useState<ModalMode>(null);
+  const [selected, setSelected] = useState<ComplianceRecord | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [entityType, setEntityType] = useState<string>(ComplianceEntityType.STUDENT);
   const [entityId, setEntityId] = useState('');
   const [notes, setNotes] = useState('');
   const [result, setResult] = useState<string>(ComplianceResult.COMPLIANT);
   const [complianceDate, setComplianceDate] = useState('');
-
   const [entityList, setEntityList] = useState<{ id: string; label: string }[]>([]);
   const [entitiesLoading, setEntitiesLoading] = useState(false);
   const [entityNameMap, setEntityNameMap] = useState<Record<string, string>>({});
 
-  const fetchData = async () => {
+  const load = async () => {
     try {
       setLoading(true);
       const data = await complianceService.getAll();
       setItems(data);
-      const uniqueTypes = [...new Set(data.map((r) => r.entityType))];
-      uniqueTypes.forEach((t) => fetchEntities(t));
-    } catch {
-      toast.error('Failed to load compliance records');
-    } finally {
-      setLoading(false);
-    }
+      const uniqueTypes = [...new Set(data.map(r => r.entityType))];
+      uniqueTypes.forEach(t => fetchEntities(t));
+    } catch { toast.error('Failed to load compliance records'); }
+    finally { setLoading(false); }
   };
 
   const fetchEntities = async (type: string) => {
     setEntitiesLoading(true);
-    setEntityList([]);
     try {
       let list: { id: string; label: string }[] = [];
       switch (type) {
-        case ComplianceEntityType.STUDENT: {
-          const data = await studentService.getAll();
-          list = data.map((s) => ({ id: s.id, label: s.name }));
-          break;
-        }
-        case ComplianceEntityType.FACULTY: {
-          const data = await facultyService.getAll();
-          list = data.map((f) => ({ id: f.id, label: f.name }));
-          break;
-        }
-        case ComplianceEntityType.DEPARTMENT: {
-          const data = await departmentService.getAll();
-          list = data.map((d) => ({ id: d.id, label: d.departmentName }));
-          break;
-        }
-        case ComplianceEntityType.COURSE: {
-          const data = await courseService.getAll();
-          list = data.map((c) => ({ id: c.id, label: c.title }));
-          break;
-        }
-        case ComplianceEntityType.CURRICULUM: {
-          const data = await curriculumService.getAll();
-          list = data.map((c) => ({ id: c.id, label: c.description }));
-          break;
-        }
-        case ComplianceEntityType.EXAM: {
-          const data = await examService.getAll();
-          list = data.map((e) => ({ id: e.id, label: `${formatEnum(e.type)} — ${e.date}` }));
-          break;
-        }
-        case ComplianceEntityType.THESIS: {
-          const data = await thesisService.getAll();
-          list = data.map((t) => ({ id: t.id!, label: t.title }));
-          break;
-        }
-        case ComplianceEntityType.RESEARCH_PROJECT: {
-          const data = await researchService.getAll();
-          list = data.map((r) => ({ id: r.projectID, label: r.title }));
-          break;
-        }
-        case ComplianceEntityType.STUDENT_DOCUMENT: {
-          const data = await documentService.getAll();
-          list = data.map((d) => ({
-            id: d.studentDocumentId,
-            label: `${formatEnum(d.docType)}${d.studentName ? ' — ' + d.studentName : ''}`,
-          }));
-          break;
-        }
+        case ComplianceEntityType.STUDENT:          { const d = await studentService.getAll();    list = d.map(s => ({ id: s.id, label: s.name })); break; }
+        case ComplianceEntityType.FACULTY:          { const d = await facultyService.getAll();    list = d.map(f => ({ id: f.id, label: f.name })); break; }
+        case ComplianceEntityType.DEPARTMENT:       { const d = await departmentService.getAll(); list = d.map(x => ({ id: x.id, label: x.departmentName })); break; }
+        case ComplianceEntityType.COURSE:           { const d = await courseService.getAll();     list = d.map(c => ({ id: c.id, label: c.title })); break; }
+        case ComplianceEntityType.CURRICULUM:       { const d = await curriculumService.getAll(); list = d.map(c => ({ id: c.id, label: c.description })); break; }
+        case ComplianceEntityType.EXAM:             { const d = await examService.getAll();       list = d.map(e => ({ id: e.id, label: `${formatEnum(e.type)} — ${e.date}` })); break; }
+        case ComplianceEntityType.THESIS:           { const d = await thesisService.getAll();     list = d.map(t => ({ id: t.id!, label: t.title })); break; }
+        case ComplianceEntityType.RESEARCH_PROJECT: { const d = await researchService.getAll();   list = d.map(r => ({ id: r.projectID, label: r.title })); break; }
+        case ComplianceEntityType.STUDENT_DOCUMENT: { const d = await documentService.getAll();   list = d.map(doc => ({ id: doc.studentDocumentId, label: `${formatEnum(doc.docType)}${doc.studentName ? ' — ' + doc.studentName : ''}` })); break; }
       }
       setEntityList(list);
-      setEntityNameMap((prev) => {
-        const next = { ...prev };
-        list.forEach(({ id, label }) => { next[id] = label; });
-        return next;
-      });
-    } catch {
-      toast.error('Failed to load entities for selection');
-    } finally {
-      setEntitiesLoading(false);
-    }
+      setEntityNameMap(prev => { const next = { ...prev }; list.forEach(({ id, label }) => { next[id] = label; }); return next; });
+    } catch { toast.error('Failed to load entity list'); }
+    finally { setEntitiesLoading(false); }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { load(); }, []);
 
-  const handleEntityTypeChange = (type: string) => {
-    setEntityType(type);
-    setEntityId('');
-    fetchEntities(type);
-  };
+  const resetForm = () => { setEntityType(ComplianceEntityType.STUDENT); setEntityId(''); setNotes(''); setResult(ComplianceResult.COMPLIANT); setComplianceDate(''); };
 
-  const openCreate = () => {
-    setEditItem(null);
-    setEntityType(ComplianceEntityType.STUDENT);
-    setEntityId('');
-    setNotes('');
-    setResult(ComplianceResult.COMPLIANT);
-    setComplianceDate('');
-    fetchEntities(ComplianceEntityType.STUDENT);
-    setShowModal(true);
-  };
-
+  const openCreate = () => { resetForm(); fetchEntities(ComplianceEntityType.STUDENT); setSelected(null); setModal('create'); };
   const openEdit = (item: ComplianceRecord) => {
-    setEditItem(item);
-    setEntityType(item.entityType);
-    setEntityId(item.entityId);
-    setNotes(item.notes);
-    setResult(item.result);
-    setComplianceDate(item.complianceDate);
-    fetchEntities(item.entityType);
-    setShowModal(true);
+    setSelected(item); setEntityType(item.entityType); setEntityId(item.entityId);
+    setNotes(item.notes); setResult(item.result); setComplianceDate(item.complianceDate);
+    fetchEntities(item.entityType); setModal('edit');
   };
 
-  const handleSubmit = async () => {
-    if (!entityId) { toast.error('Please select an entity'); return; }
-    if (!complianceDate) { toast.error('Please select a compliance date'); return; }
+  const handleSave = async () => {
+    if (!entityId) { toast.error('Select an entity'); return; }
+    if (!complianceDate) { toast.error('Select a date'); return; }
+    setSaving(true);
     try {
-      const payload: CreateComplianceRecordRequest = {
-        recordedByUserId: user?.id || '',
-        entityId,
-        entityType: entityType as ComplianceEntityType,
-        result: result as ComplianceResult,
-        complianceDate,
-        notes,
-      };
-      if (editItem) {
-        await complianceService.update(editItem.id, payload);
-        toast.success('Compliance record updated');
-      } else {
-        await complianceService.create(payload);
-        toast.success('Compliance record created');
-      }
-      setShowModal(false);
-      fetchData();
-    } catch {
-      toast.error('Failed to save compliance record');
-    }
+      const payload: CreateComplianceRecordRequest = { recordedByUserId: user?.id || '', entityId, entityType: entityType as ComplianceEntityType, result: result as ComplianceResult, complianceDate, notes };
+      if (modal === 'edit' && selected) { await complianceService.update(selected.id, payload); toast.success('Record updated'); }
+      else { await complianceService.create(payload); toast.success('Record created'); }
+      setModal(null); load();
+    } catch { toast.error('Failed to save record'); }
+    finally { setSaving(false); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure?')) return;
-    try {
-      await complianceService.delete(id);
-      toast.success('Compliance record deleted');
-      fetchData();
-    } catch {
-      toast.error('Failed to delete compliance record');
-    }
+  const handleDelete = async () => {
+    if (!selected) return;
+    setSaving(true);
+    try { await complianceService.delete(selected.id); toast.success('Record deleted'); setModal(null); load(); }
+    catch { toast.error('Failed to delete record'); }
+    finally { setSaving(false); }
   };
 
   const columns: Column<ComplianceRecord>[] = [
-    { key: 'entityType', label: 'Entity Type', render: (item) => formatEnum(item.entityType) },
-    {
-      key: 'entityId',
-      label: 'Entity',
-      render: (item) => entityNameMap[item.entityId] ?? <span className="text-muted fst-italic">Loading...</span>,
-    },
-    {
-      key: 'notes',
-      label: 'Notes',
-      render: (item) => item.notes.length > 60 ? item.notes.substring(0, 60) + '...' : item.notes,
-    },
-    {
-      key: 'result',
-      label: 'Result',
-      render: (item) => <StatusBadge status={item.result} />,
-    },
-    { key: 'complianceDate', label: 'Date' },
+    { key: 'entityType', label: 'Entity Type', render: item => formatEnum(item.entityType) },
+    { key: 'entityId',   label: 'Entity', render: item => entityNameMap[item.entityId] ?? <span style={{ color: 'var(--text-3)', fontStyle: 'italic' }}>—</span> },
+    { key: 'notes',      label: 'Notes', render: item => item.notes.length > 50 ? item.notes.slice(0, 50) + '…' : item.notes },
+    { key: 'result',     label: 'Result', render: item => <StatusBadge status={item.result} /> },
+    { key: 'complianceDate', label: 'Date', render: item => new Date(item.complianceDate).toLocaleDateString() },
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Compliance Records"
-        subtitle="Manage compliance records"
-        action={
-          <Button variant="primary" size="sm" onClick={openCreate}>
-            <BsPlus className="me-1" /> Add New
-          </Button>
-        }
+    <>
+      <PageHeader title="Compliance Records" subtitle="Manage compliance assessments"
+        action={<button className="btn btn-primary btn-sm" onClick={openCreate}><BsPlus className="me-1" />Add Record</button>}
       />
-
-      <DataTable
-        columns={columns}
-        data={items}
-        loading={loading}
-        actions={(item) => (
-          <div className="d-flex gap-1">
-            <Button variant="outline-primary" size="sm" onClick={() => openEdit(item)}>
-              <BsPencil />
-            </Button>
-            <Button variant="outline-danger" size="sm" onClick={() => handleDelete(item.id)}>
-              <BsTrash />
-            </Button>
+      <DataTable columns={columns} data={items} loading={loading}
+        actions={item => (
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
+            <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
           </div>
         )}
       />
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>{editItem ? 'Edit Compliance Record' : 'Create Compliance Record'}</Modal.Title>
-        </Modal.Header>
+      <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)} size="lg">
+        <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Record' : 'New Compliance Record'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Entity Type</Form.Label>
-              <Form.Select value={entityType} onChange={(e) => handleEntityTypeChange(e.target.value)}>
-                {Object.values(ComplianceEntityType).map((t) => (
-                  <option key={t} value={t}>{formatEnum(t)}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Entity</Form.Label>
-              <Form.Select
-                value={entityId}
-                onChange={(e) => setEntityId(e.target.value)}
-                disabled={entitiesLoading}
-              >
-                <option value="">
-                  {entitiesLoading ? 'Loading...' : `Select ${formatEnum(entityType)}`}
-                </option>
-                {entityList.map((opt) => (
-                  <option key={opt.id} value={opt.id}>{opt.label}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Result</Form.Label>
-              <Form.Select value={result} onChange={(e) => setResult(e.target.value)}>
-                {Object.values(ComplianceResult).map((r) => (
-                  <option key={r} value={r}>{formatEnum(r)}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Compliance Date</Form.Label>
-              <Form.Control type="date" value={complianceDate} onChange={(e) => setComplianceDate(e.target.value)} />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Notes</Form.Label>
-              <Form.Control as="textarea" rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} />
-            </Form.Group>
-          </Form>
+          <div style={{ marginBottom: 14 }}>
+            <label className="form-label">Entity Type</label>
+            <select className="form-select" value={entityType} onChange={e => { setEntityType(e.target.value); setEntityId(''); fetchEntities(e.target.value); }}>
+              {Object.values(ComplianceEntityType).map(t => <option key={t} value={t}>{formatEnum(t)}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label className="form-label">Entity</label>
+            <select className="form-select" value={entityId} onChange={e => setEntityId(e.target.value)} disabled={entitiesLoading}>
+              <option value="">{entitiesLoading ? 'Loading…' : `Select ${formatEnum(entityType)}`}</option>
+              {entityList.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+            </select>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+            <div>
+              <label className="form-label">Result</label>
+              <select className="form-select" value={result} onChange={e => setResult(e.target.value)}>
+                {Object.values(ComplianceResult).map(r => <option key={r} value={r}>{formatEnum(r)}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Compliance Date</label>
+              <input type="date" className="form-control" value={complianceDate} onChange={e => setComplianceDate(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <label className="form-label">Notes</label>
+            <textarea className="form-control" rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Compliance notes…" />
+          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit}>Save</Button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
+            {saving && <span className="spinner-border spinner-border-sm me-2" />}Save
+          </button>
         </Modal.Footer>
       </Modal>
-    </div>
+
+      <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
+        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
+          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete this record?</p>
+          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+            <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
+          </div>
+        </Modal.Body>
+      </Modal>
+    </>
   );
 }
