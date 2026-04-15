@@ -82,7 +82,7 @@ export default function DeptReports() {
       <Modal show={modal} onHide={() => setModal(false)} size="lg">
         <Modal.Header closeButton><Modal.Title>Create Report</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Scope</label>
             <select className="form-select" value={scope} onChange={e => setScope(e.target.value)}>
               <option value="">Select scope</option>
@@ -94,7 +94,7 @@ export default function DeptReports() {
               <option value="RESEARCH">Research</option>
             </select>
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Metrics</label>
             <textarea className="form-control" rows={5} value={metrics} onChange={e => setMetrics(e.target.value)} />
           </div>

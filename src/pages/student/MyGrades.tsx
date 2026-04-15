@@ -63,7 +63,7 @@ export default function MyGrades() {
     return (
       <>
         <PageHeader title="My Grades" subtitle="View your exam results" />
-        <div style={{ padding: 40, textAlign: 'center' }}>
+        <div className="py-10 text-center">
           <span className="spinner-border spinner-border-sm me-2" />Loading grades…
         </div>
       </>
@@ -75,24 +75,24 @@ export default function MyGrades() {
       <PageHeader title="My Grades" subtitle="View your exam results by course" />
 
       {rows.length === 0 ? (
-        <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--text-2)', fontSize: 14 }}>
+        <div className="py-8 text-center text-secondary text-base">
           No grades available yet. Results will appear here after your exams are completed and graded.
         </div>
       ) : (
         <>
           {/* Summary cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 24 }}>
-            <div className="card" style={{ padding: '16px 20px' }}>
-              <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 4 }}>Average Score</div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--accent)' }}>{avg ?? '—'}</div>
+          <div className="grid grid-cols-3 gap-3.5 mb-6">
+            <div className="card p-4">
+              <div className="text-sm text-tertiary mb-1">Average Score</div>
+              <div className="text-7xl font-black text-blue">{avg ?? '—'}</div>
             </div>
-            <div className="card" style={{ padding: '16px 20px' }}>
-              <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 4 }}>Passed</div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--success)' }}>{passed}</div>
+            <div className="card p-4">
+              <div className="text-sm text-tertiary mb-1">Passed</div>
+              <div className="text-7xl font-black text-success">{passed}</div>
             </div>
-            <div className="card" style={{ padding: '16px 20px' }}>
-              <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 4 }}>Failed</div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--danger)' }}>{failed}</div>
+            <div className="card p-4">
+              <div className="text-sm text-tertiary mb-1">Failed</div>
+              <div className="text-7xl font-black text-danger">{failed}</div>
             </div>
           </div>
 
@@ -100,46 +100,45 @@ export default function MyGrades() {
           {Object.values(grouped).map(courseRows => {
             const course = courseRows[0].course;
             return (
-              <div key={course?.id ?? 'unknown'} className="card" style={{ marginBottom: 20, padding: 0, overflow: 'hidden' }}>
-                <div style={{ padding: '12px 20px', background: 'var(--sidebar-bg)', borderBottom: '1px solid var(--border)' }}>
-                  <span style={{ fontWeight: 600, fontSize: 15 }}>{course?.title ?? 'Unknown Course'}</span>
+              <div key={course?.id ?? 'unknown'} className="card mb-5 p-0 overflow-hidden">
+                <div className="py-3 px-5 bg-base border-b border-border">
+                  <span className="font-semibold text-lg">{course?.title ?? 'Unknown Course'}</span>
                   {course && (
-                    <span style={{ fontSize: 12, color: 'var(--text-3)', marginLeft: 10 }}>{course.credits} credits</span>
+                    <span className="text-sm text-tertiary ml-2.5">{course.credits} credits</span>
                   )}
                 </div>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <table className="w-full text-base">
                   <thead>
-                    <tr style={{ background: 'var(--table-header-bg)' }}>
-                      <th style={{ padding: '8px 20px', textAlign: 'left', fontWeight: 600, color: 'var(--text-2)', fontSize: 12 }}>Exam Type</th>
-                      <th style={{ padding: '8px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--text-2)', fontSize: 12 }}>Date</th>
-                      <th style={{ padding: '8px 16px', textAlign: 'center', fontWeight: 600, color: 'var(--text-2)', fontSize: 12 }}>Score</th>
-                      <th style={{ padding: '8px 16px', textAlign: 'center', fontWeight: 600, color: 'var(--text-2)', fontSize: 12 }}>Grade</th>
-                      <th style={{ padding: '8px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--text-2)', fontSize: 12 }}>Status</th>
+                    <tr>
+                      <th className="py-2 px-5 text-left font-semibold text-secondary text-sm">Exam Type</th>
+                      <th className="py-2 px-4 text-left font-semibold text-secondary text-sm">Date</th>
+                      <th className="py-2 px-4 text-center font-semibold text-secondary text-sm">Score</th>
+                      <th className="py-2 px-4 text-center font-semibold text-secondary text-sm">Grade</th>
+                      <th className="py-2 px-4 text-left font-semibold text-secondary text-sm">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {courseRows.map((r, i) => (
-                      <tr key={r.grade.id ?? i} style={{ borderTop: '1px solid var(--border)' }}>
-                        <td style={{ padding: '10px 20px' }}>
+                      <tr key={r.grade.id ?? i} className="border-t border-border">
+                        <td className="py-2.5 px-5">
                           <StatusBadge status={r.exam?.type} />
                         </td>
-                        <td style={{ padding: '10px 16px', color: 'var(--text-2)' }}>
+                        <td className="py-2.5 px-4 text-secondary">
                           {r.exam ? new Date(r.exam.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
                         </td>
-                        <td style={{ padding: '10px 16px', textAlign: 'center' }}>
-                          <span style={{ fontWeight: 600 }}>{r.grade.score}</span>
-                          <span style={{ color: 'var(--text-3)', fontSize: 11 }}>/100</span>
+                        <td className="py-2.5 px-4 text-center">
+                          <span className="font-semibold">{r.grade.score}</span>
+                          <span className="text-tertiary text-xs">/100</span>
                         </td>
-                        <td style={{ padding: '10px 16px', textAlign: 'center' }}>
-                          <span style={{
-                            fontWeight: 700,
-                            fontSize: 16,
-                            color: r.grade.grade === 'F' ? 'var(--danger)' : r.grade.grade === 'A' ? 'var(--success)' : 'var(--accent)',
-                          }}>
+                        <td className="py-2.5 px-4 text-center">
+                          <span className={`font-black text-lg ${
+                            r.grade.grade === 'F' ? 'text-danger' :
+                            r.grade.grade === 'A' ? 'text-success' : 'text-blue'
+                          }`}>
                             {r.grade.grade}
                           </span>
                         </td>
-                        <td style={{ padding: '10px 16px' }}>
+                        <td className="py-2.5 px-4">
                           <StatusBadge status={r.grade.status} />
                         </td>
                       </tr>

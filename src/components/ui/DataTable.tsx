@@ -29,8 +29,8 @@ function SkeletonRows({ cols }: { cols: number }) {
       {[1, 2, 3, 4, 5].map(i => (
         <tr key={i}>
           {Array.from({ length: cols }).map((_, j) => (
-            <td key={j} style={{ padding: '14px 16px' }}>
-              <span className="skeleton" style={{ width: j === 0 ? '60%' : j % 2 === 0 ? '80%' : '45%', display: 'block' }} />
+            <td key={j} className="px-4 py-3.5">
+              <span className={`skeleton block ${j === 0 ? 'w-3/5' : j % 2 === 0 ? 'w-4/5' : 'w-2/5'}`} />
             </td>
           ))}
         </tr>
@@ -68,7 +68,7 @@ export function DataTable<T>({ columns, data, loading, searchable = true, onRowC
               disabled={loading}
             />
           </div>
-          <span style={{ fontSize: 12, color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
+          <span className="text-xs text-tertiary whitespace-nowrap">
             {loading ? 'Loading…' : filtered.length !== safeData.length
               ? `${filtered.length} of ${safeData.length}`
               : `${safeData.length} record${safeData.length !== 1 ? 's' : ''}`}
@@ -80,7 +80,7 @@ export function DataTable<T>({ columns, data, loading, searchable = true, onRowC
         <thead>
           <tr>
             {columns.map(col => <th key={col.key}>{col.label}</th>)}
-            {actions && <th style={{ width: 1 }}>Actions</th>}
+            {actions && <th className="w-1">Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -103,7 +103,7 @@ export function DataTable<T>({ columns, data, loading, searchable = true, onRowC
               <tr
                 key={rowKey(item, i)}
                 onClick={() => onRowClick?.(item)}
-                style={onRowClick ? { cursor: 'pointer' } : undefined}
+                className={onRowClick ? 'cursor-pointer' : ''}
               >
                 {columns.map(col => (
                   <td key={col.key}>
@@ -114,8 +114,8 @@ export function DataTable<T>({ columns, data, loading, searchable = true, onRowC
                   </td>
                 ))}
                 {actions && (
-                  <td style={{ whiteSpace: 'nowrap' }}>
-                    <div style={{ display: 'flex', gap: 4 }}>{actions(item)}</div>
+                  <td className="whitespace-nowrap">
+                    <div className="flex gap-1">{actions(item)}</div>
                   </td>
                 )}
               </tr>

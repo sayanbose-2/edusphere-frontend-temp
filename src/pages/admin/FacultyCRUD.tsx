@@ -119,10 +119,10 @@ export default function FacultyCRUD() {
 
   const columns: Column<Faculty>[] = [
     { key: 'name', label: 'Name', render: item => (
-      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <span className="flex items-center gap-1.5">
         {item.name}
         {deptHeadIds.has(item.id) && (
-          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 10, background: 'var(--navy, #1a3a5c)', color: '#fff', letterSpacing: '0.03em', whiteSpace: 'nowrap' }}>
+          <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-navy text-white tracking-wider whitespace-nowrap">
             Dept. Head
           </span>
         )}
@@ -142,7 +142,7 @@ export default function FacultyCRUD() {
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
           </div>
@@ -156,10 +156,10 @@ export default function FacultyCRUD() {
         <Modal.Body>
           {modal === 'create' && (
             <>
-              <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 14, padding: '8px 10px', background: 'var(--bg-2)', borderRadius: 6 }}>
+              <p className="text-xs text-tertiary bg-bg-2 p-2.5 rounded mb-3.5">
                 Step 1 — Account credentials (used to log in)
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div className="grid grid-cols-2 gap-3.5 mb-3.5">
                 <div>
                   <label className="form-label">Full Name</label>
                   <input className="form-control" value={name} onChange={e => setName(e.target.value)} placeholder="Jane Smith" required />
@@ -169,7 +169,7 @@ export default function FacultyCRUD() {
                   <input type="email" className="form-control" value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@school.edu" required />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+              <div className="grid grid-cols-2 gap-3.5 mb-5">
                 <div>
                   <label className="form-label">Password</label>
                   <input type="password" className="form-control" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 characters" required />
@@ -179,13 +179,13 @@ export default function FacultyCRUD() {
                   <input className="form-control" value={phone} onChange={e => setPhone(e.target.value)} />
                 </div>
               </div>
-              <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 14, padding: '8px 10px', background: 'var(--bg-2)', borderRadius: 6 }}>
+              <p className="text-xs text-tertiary bg-bg-2 p-2.5 rounded mb-3.5">
                 Step 2 — Faculty profile details
               </p>
             </>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div className="grid grid-cols-2 gap-3.5 mb-3.5">
             <div>
               <label className="form-label">Position</label>
               <input className="form-control" value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Associate Professor" required />
@@ -215,10 +215,10 @@ export default function FacultyCRUD() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete "{selected?.name}"?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete "{selected?.name}"?</p>
+          <p className="text-xs text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

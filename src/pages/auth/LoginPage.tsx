@@ -33,26 +33,26 @@ export default function LoginPage() {
   return (
     <div className="auth-page">
       <div className="auth-left">
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 340 }}>
-          <div style={{ width: 72, height: 72, borderRadius: 18, background: 'rgba(37,99,235,0.15)', border: '1px solid rgba(37,99,235,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-            <BsMortarboardFill size={32} style={{ color: '#60A5FA' }} />
+        <div className="relative z-10 text-center max-w-xs">
+          <div className="w-18 h-18 rounded-2xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center mx-auto mb-5">
+            <BsMortarboardFill size={32} className="text-blue-300" />
           </div>
-          <h2 style={{ color: '#F1F5F9', fontWeight: 800, fontSize: 28, margin: '0 0 8px', letterSpacing: '-0.5px' }}>EduSphere</h2>
-          <p style={{ color: 'rgba(241,245,249,0.5)', fontSize: 14, margin: '0 0 44px', lineHeight: 1.6 }}>Integrated Academic Management System</p>
+          <h2 className="text-blue-50 font-black text-2xl mb-2 tracking-tight">EduSphere</h2>
+          <p className="text-blue-50/50 text-sm mb-11 leading-relaxed">Integrated Academic Management System</p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left' }}>
+          <div className="flex flex-col gap-4 text-left">
             {[
               { icon: <BsPeopleFill size={14} />, title: 'Multi-Role Access',  desc: 'Students, Faculty, Admins & more' },
               { icon: <BsBook size={14} />,        title: 'Academic Records',   desc: 'Grades, courses, and curriculum' },
               { icon: <BsAwardFill size={14} />,   title: 'Research & Thesis',  desc: 'End-to-end project tracking' },
             ].map(item => (
-              <div key={item.title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <div style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60A5FA', flexShrink: 0 }}>
+              <div key={item.title} className="flex gap-3 items-start">
+                <div className="w-9 h-9 rounded-lg bg-blue-400/10 border border-blue-400/[0.18] flex items-center justify-center text-blue-300 flex-shrink-0">
                   {item.icon}
                 </div>
                 <div>
-                  <div style={{ color: '#F1F5F9', fontWeight: 600, fontSize: 13 }}>{item.title}</div>
-                  <div style={{ color: 'rgba(241,245,249,0.4)', fontSize: 12, marginTop: 2 }}>{item.desc}</div>
+                  <div className="text-blue-50 font-semibold text-sm">{item.title}</div>
+                  <div className="text-blue-50/40 text-xs mt-0.5">{item.desc}</div>
                 </div>
               </div>
             ))}
@@ -62,32 +62,32 @@ export default function LoginPage() {
 
       <div className="auth-right">
         <div className="auth-box">
-          <div style={{ textAlign: 'center', marginBottom: 28 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 11, background: 'var(--blue-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-              <BsMortarboardFill size={20} style={{ color: 'var(--blue)' }} />
+          <div className="text-center mb-7">
+            <div className="w-11 h-11 rounded-xl bg-blue-dim flex items-center justify-center mx-auto mb-3.5">
+              <BsMortarboardFill size={20} className="text-blue" />
             </div>
-            <h5 style={{ color: 'var(--text)', fontWeight: 700, margin: '0 0 5px', fontSize: 18 }}>Sign in to EduSphere</h5>
-            <p style={{ color: 'var(--text-2)', fontSize: 13, margin: 0 }}>
+            <h5 className="text-base text-base font-bold mb-1">Sign in to EduSphere</h5>
+            <p className="text-xs text-secondary m-0">
               Use the credentials provided by your administrator
             </p>
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: 14 }}>
+            <div className="mb-3.5">
               <label className="form-label">Email address</label>
               <input type="email" className="form-control" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required />
             </div>
-            <div style={{ marginBottom: 24 }}>
+            <div className="mb-6">
               <label className="form-label">Password</label>
               <input type="password" className="form-control" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
             </div>
-            <button type="submit" className="btn btn-primary w-100" disabled={loading} style={{ padding: '10px', fontWeight: 600, fontSize: 14 }}>
+            <button type="submit" className="btn btn-primary w-full py-2.5 font-semibold text-sm" disabled={loading}>
               {loading && <span className="spinner-border spinner-border-sm me-2" />}
               {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
 
-          <p style={{ textAlign: 'center', marginTop: 20, marginBottom: 0, fontSize: 13, color: 'var(--text-2)' }}>
+          <p className="text-center mt-5 mb-0 text-xs text-secondary">
             Contact your administrator if you need access.
           </p>
         </div>

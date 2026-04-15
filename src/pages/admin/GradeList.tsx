@@ -122,7 +122,7 @@ export default function GradeList() {
     { key: 'examId',    label: 'Exam',    render: item => examLabel(item.examId) },
     { key: 'studentId', label: 'Student', render: item => studentName(item.studentId) },
     { key: 'score',     label: 'Score',   render: item => `${item.score}/100` },
-    { key: 'grade',     label: 'Grade',   render: item => <strong style={{ fontSize: 15 }}>{item.grade}</strong> },
+    { key: 'grade',     label: 'Grade',   render: item => <strong className="text-base">{item.grade}</strong> },
     { key: 'status',    label: 'Status',  render: item => <StatusBadge status={item.status} /> },
   ];
 
@@ -132,18 +132,18 @@ export default function GradeList() {
         action={<button className="btn btn-primary btn-sm" onClick={openCreate}><BsPlus className="me-1" />Add Grade</button>}
       />
 
-      <div style={{ display: 'flex', gap: 14, marginBottom: 16, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <label className="form-label" style={{ marginBottom: 0, whiteSpace: 'nowrap' }}>Student</label>
-          <select className="form-select form-select-sm" style={{ minWidth: 160 }} value={filterStudentId}
+      <div className="flex gap-3.5 mb-4 flex-wrap">
+        <div className="flex items-center gap-2">
+          <label className="form-label m-0 whitespace-nowrap">Student</label>
+          <select className="form-select form-select-sm min-w-40" value={filterStudentId}
             onChange={e => { setFilterStudentId(e.target.value); setFilterExamId(''); filterByStudent(e.target.value); }}>
             <option value="">All students</option>
             {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <label className="form-label" style={{ marginBottom: 0, whiteSpace: 'nowrap' }}>Exam</label>
-          <select className="form-select form-select-sm" style={{ minWidth: 200 }} value={filterExamId}
+        <div className="flex items-center gap-2">
+          <label className="form-label m-0 whitespace-nowrap">Exam</label>
+          <select className="form-select form-select-sm min-w-52" value={filterExamId}
             onChange={e => { setFilterExamId(e.target.value); setFilterStudentId(''); filterByExam(e.target.value); }}>
             <option value="">All exams</option>
             {allExams.map(e => <option key={e.id} value={e.id}>{courseName(e.courseId)} — {formatEnum(e.type)}</option>)}
@@ -153,7 +153,7 @@ export default function GradeList() {
 
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} disabled={!item.id} title="Edit"><BsPencil size={13} /></button>
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} disabled={!item.id} title="Delete"><BsTrash size={13} /></button>
           </div>
@@ -163,8 +163,8 @@ export default function GradeList() {
       <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Grade' : 'Add Grade'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
-            <label className="form-label">Exam <span style={{ fontSize: 11, color: 'var(--text-3)' }}>(completed exams only)</span></label>
+          <div className="mb-3.5">
+            <label className="form-label">Exam <span className="text-xs text-tertiary">(completed exams only)</span></label>
             <select className="form-select" value={examId} onChange={e => setExamId(e.target.value)}>
               <option value="">Select completed exam</option>
               {completedExams.map(e => (
@@ -174,16 +174,16 @@ export default function GradeList() {
               ))}
             </select>
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Student</label>
             <select className="form-select" value={studentId} onChange={e => setStudentId(e.target.value)}>
               <option value="">Select student</option>
               {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+          <div className="grid grid-cols-3 gap-3.5">
             <div>
-              <label className="form-label">Score <span style={{ fontSize: 11, color: 'var(--text-3)' }}>(0–100)</span></label>
+              <label className="form-label">Score <span className="text-xs text-tertiary">(0–100)</span></label>
               <input type="number" className="form-control" value={score} onChange={e => onScoreChange(Number(e.target.value))} min={0} max={100} />
             </div>
             <div>
@@ -200,7 +200,7 @@ export default function GradeList() {
               </select>
             </div>
           </div>
-          <small style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6, display: 'block' }}>
+          <small className="text-xs text-tertiary mt-1.5 block">
             Grade and status are auto-calculated from score. You can override manually.
           </small>
         </Modal.Body>
@@ -213,10 +213,10 @@ export default function GradeList() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete this grade record?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="py-7 text-center">
+          <p className="font-semibold mb-1.5">Delete this grade record?</p>
+          <p className="text-base text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

@@ -49,17 +49,17 @@ export default function AdminDashboard() {
   }, []);
 
   const stats = [
-    { label: 'Users',       value: counts.users,       icon: <BsPeople size={18} />,        color: '#2563EB', bg: 'rgba(37,99,235,0.08)' },
-    { label: 'Students',    value: counts.students,    icon: <BsMortarboard size={18} />,   color: '#16A34A', bg: 'rgba(22,163,74,0.08)' },
-    { label: 'Faculty',     value: counts.faculty,     icon: <BsPersonBadge size={18} />,   color: '#0284C7', bg: 'rgba(2,132,199,0.08)' },
-    { label: 'Departments', value: counts.departments, icon: <BsBuilding size={18} />,      color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' },
-    { label: 'Courses',     value: counts.courses,     icon: <BsBook size={18} />,          color: '#D97706', bg: 'rgba(217,119,6,0.08)' },
-    { label: 'Exams',       value: counts.exams,       icon: <BsClipboardCheck size={18} />, color: '#DC2626', bg: 'rgba(220,38,38,0.08)' },
+    { label: 'Users',       value: counts.users,       icon: <BsPeople size={18} />,         tw: 'bg-blue-dim text-blue' },
+    { label: 'Students',    value: counts.students,    icon: <BsMortarboard size={18} />,    tw: 'bg-success/10 text-success' },
+    { label: 'Faculty',     value: counts.faculty,     icon: <BsPersonBadge size={18} />,    tw: 'bg-info/10 text-info' },
+    { label: 'Departments', value: counts.departments, icon: <BsBuilding size={18} />,       tw: 'bg-purple-100/60 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400' },
+    { label: 'Courses',     value: counts.courses,     icon: <BsBook size={18} />,           tw: 'bg-warning/10 text-warning' },
+    { label: 'Exams',       value: counts.exams,       icon: <BsClipboardCheck size={18} />, tw: 'bg-danger/10 text-danger' },
   ];
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
+      <div className="flex justify-center pt-20">
         <Spinner animation="border" />
       </div>
     );
@@ -68,37 +68,37 @@ export default function AdminDashboard() {
   return (
     <>
       {/* Welcome */}
-      <div className="welcome-banner" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 60%, #1D4ED8 100%)', color: '#fff' }}>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ margin: '0 0 5px', fontSize: 11, opacity: 0.55, letterSpacing: 0.5, textTransform: 'uppercase' }}>{dateStr()}</p>
-          <h2 style={{ margin: '0 0 5px', fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>
+      <div className="welcome-banner welcome-banner--admin">
+        <div className="relative z-10">
+          <p className="m-0 text-xs opacity-55 tracking-wide uppercase">{dateStr()}</p>
+          <h2 className="m-0 text-3xl font-black tracking-tight -ml-0.5">
             {greet()}, {user?.name?.split(' ')[0]}
           </h2>
-          <p style={{ margin: 0, fontSize: 13, opacity: 0.6 }}>Administrator · Here's your institution at a glance</p>
+          <p className="m-0 text-base opacity-60">Administrator · Here's your institution at a glance</p>
         </div>
-        <BsShieldCheck size={56} style={{ opacity: 0.08 }} />
+        <BsShieldCheck size={56} className="opacity-8" />
       </div>
 
       {/* Stats */}
       <Row className="g-3 mb-4">
         {stats.map(s => (
           <Col key={s.label} xs={6} md={4} lg={2}>
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '16px 18px', boxShadow: 'var(--shadow)' }}>
-              <div style={{ width: 34, height: 34, borderRadius: 8, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, marginBottom: 10 }}>
+            <div className="bg-surface border border-border rounded-lg p-4 shadow-var-sm">
+              <div className={`w-34 h-34 rounded-lg mb-2.5 flex items-center justify-center ${s.tw}`}>
                 {s.icon}
               </div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.5px', lineHeight: 1 }}>{s.value}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 4 }}>{s.label}</div>
+              <div className="text-3xl font-black text-base tracking-tight leading-none">{s.value}</div>
+              <div className="text-sm text-secondary mt-1">{s.label}</div>
             </div>
           </Col>
         ))}
       </Row>
 
       {/* Recent Audits */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
-        <div style={{ padding: '13px 18px', borderBottom: '1px solid var(--border)', background: 'var(--subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Recent Audits</span>
-          <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Last {audits.length} records</span>
+      <div className="bg-surface border border-border rounded-lg overflow-hidden shadow-var-sm">
+        <div className="flex justify-between items-center py-3.25 px-4.5 border-b border-border bg-subtle">
+          <span className="text-base font-semibold text-base">Recent Audits</span>
+          <span className="text-xs text-tertiary">Last {audits.length} records</span>
         </div>
         <Table hover responsive className="mb-0">
           <thead>
@@ -108,12 +108,12 @@ export default function AdminDashboard() {
           </thead>
           <tbody>
             {audits.length === 0 ? (
-              <tr><td colSpan={4} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>No audits recorded yet</td></tr>
+              <tr><td colSpan={4} className="py-8 text-center text-tertiary text-base">No audits recorded yet</td></tr>
             ) : audits.map(a => (
               <tr key={a.id}>
                 <td>{a.entityType}</td>
                 <td>{a.scope}</td>
-                <td style={{ color: 'var(--text-2)' }}>{new Date(a.auditDate).toLocaleDateString()}</td>
+                <td className="text-secondary">{new Date(a.auditDate).toLocaleDateString()}</td>
                 <td><StatusBadge status={a.status} /></td>
               </tr>
             ))}

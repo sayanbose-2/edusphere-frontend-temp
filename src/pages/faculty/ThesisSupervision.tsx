@@ -69,9 +69,9 @@ export default function ThesisSupervision() {
         <Modal.Header closeButton><Modal.Title>Update Thesis Status</Modal.Title></Modal.Header>
         <Modal.Body>
           {selected && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>{selected.title}</div>
-              <div style={{ color: 'var(--text-2)' }}>Student: {studentName(selected.studentId)}</div>
+            <div className="bg-surface border border-border rounded p-3.5 text-sm mb-4">
+              <div className="font-semibold mb-1">{selected.title}</div>
+              <div className="text-secondary">Student: {studentName(selected.studentId)}</div>
             </div>
           )}
           <label className="form-label">Status</label>

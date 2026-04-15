@@ -94,7 +94,7 @@ export default function CurriculumCRUD() {
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
           </div>
@@ -104,14 +104,14 @@ export default function CurriculumCRUD() {
       <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)} size="lg">
         <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Curriculum' : 'New Curriculum'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Course</label>
             <select className="form-select" value={courseId} onChange={e => setCourseId(e.target.value)}>
               <option value="">Select course</option>
               {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div className="grid grid-cols-2 gap-3.5 mb-3.5">
             <div>
               <label className="form-label">Status</label>
               <select className="form-select" value={status} onChange={e => setStatus(e.target.value as Status)}>
@@ -119,23 +119,23 @@ export default function CurriculumCRUD() {
               </select>
             </div>
           </div>
-          <div style={{ marginBottom: 18 }}>
+          <div className="mb-4.5">
             <label className="form-label">Description</label>
             <textarea className="form-control" rows={3} value={description} onChange={e => setDescription(e.target.value)} placeholder="Overall curriculum description" />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Modules</span>
+          <div className="flex justify-between items-center mb-2.5">
+            <span className="text-xs font-semibold text-base">Modules</span>
             <button className="btn btn-secondary btn-sm" onClick={() => setModules(p => [...p, emptyMod()])}><BsPlus className="me-1" />Add Module</button>
           </div>
 
           {modules.map((mod, i) => (
-            <div key={i} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 14, marginBottom: 12, background: 'var(--bg)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Module {i + 1}</span>
+            <div key={i} className="border border-light rounded-lg p-3.5 mb-3 bg-base">
+              <div className="flex justify-between items-center mb-2.5">
+                <span className="text-xs font-bold text-tertiary uppercase tracking-wider">Module {i + 1}</span>
                 <button className="icon-btn icon-btn-danger" onClick={() => setModules(p => p.length > 1 ? p.filter((_, idx) => idx !== i) : p)} disabled={modules.length === 1}><BsDashCircle size={13} /></button>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+              <div className="grid grid-cols-2 gap-2.5 mb-2.5">
                 <div>
                   <label className="form-label">Title</label>
                   <input className="form-control" value={mod.title} onChange={e => updMod(i, 'title', e.target.value)} placeholder="Module title" />
@@ -161,10 +161,10 @@ export default function CurriculumCRUD() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete this curriculum?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete this curriculum?</p>
+          <p className="text-xs text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

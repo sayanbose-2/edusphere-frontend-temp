@@ -129,7 +129,7 @@ export default function MyDocuments() {
       <Modal show={modal} onHide={() => setModal(false)}>
         <Modal.Header closeButton><Modal.Title>Upload Document</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Document Type</label>
             <select className="form-select" value={docType} onChange={e => setDocType(e.target.value as DocumentType)}>
               {(Object.keys(DOC_TYPE_LABELS) as DocumentType[]).map(key => (
@@ -140,7 +140,7 @@ export default function MyDocuments() {
           <div>
             <label className="form-label">File</label>
             <input type="file" className="form-control" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" onChange={e => setFile((e.target as HTMLInputElement).files?.[0] ?? null)} />
-            <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 4 }}>Accepted: PDF, Word, TXT, JPG, PNG</div>
+            <div className="text-xs text-secondary mt-1">Accepted: PDF, Word, TXT, JPG, PNG</div>
           </div>
         </Modal.Body>
         <Modal.Footer>

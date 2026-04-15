@@ -46,10 +46,10 @@ export default function CompAuditLogs() {
   return (
     <>
       <PageHeader title="Audit Logs" subtitle="View system audit logs (read-only)" />
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <label style={{ fontSize: 13, whiteSpace: 'nowrap', color: 'var(--text-2)' }}>Severity:</label>
-          <select className="form-select form-select-sm" value={severityFilter} onChange={e => setSeverityFilter(e.target.value)} style={{ width: 130 }}>
+      <div className="flex gap-3 mb-4 flex-wrap items-center">
+        <div className="flex items-center gap-2">
+          <label className="text-sm whitespace-nowrap text-secondary">Severity:</label>
+          <select className="form-select form-select-sm w-32" value={severityFilter} onChange={e => setSeverityFilter(e.target.value)}>
             <option value="">All</option>
             <option value="INFO">Info</option>
             <option value="WARN">Warn</option>
@@ -57,9 +57,9 @@ export default function CompAuditLogs() {
             <option value="CRITICAL">Critical</option>
           </select>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <label style={{ fontSize: 13, whiteSpace: 'nowrap', color: 'var(--text-2)' }}>Resource:</label>
-          <input className="form-control form-control-sm" value={resourceFilter} onChange={e => setResourceFilter(e.target.value)} placeholder="Filter by resource" style={{ width: 220 }} />
+        <div className="flex items-center gap-2">
+          <label className="text-sm whitespace-nowrap text-secondary">Resource:</label>
+          <input className="form-control form-control-sm w-56" value={resourceFilter} onChange={e => setResourceFilter(e.target.value)} placeholder="Filter by resource" />
         </div>
       </div>
       <DataTable columns={columns} data={items} loading={loading} />

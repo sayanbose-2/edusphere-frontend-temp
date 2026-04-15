@@ -68,9 +68,9 @@ export default function CompAudits() {
   return (
     <>
       <PageHeader title="Compliance Audits" subtitle="Review audit records" />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-        <label style={{ fontSize: 13, whiteSpace: 'nowrap', color: 'var(--text-2)' }}>Filter by Status:</label>
-        <select className="form-select form-select-sm" value={statusFilter} onChange={e => handleFilterChange(e.target.value)} style={{ width: 160 }}>
+      <div className="flex items-center gap-2 mb-4">
+        <label className="text-sm whitespace-nowrap text-secondary">Filter by Status:</label>
+        <select className="form-select form-select-sm w-40" value={statusFilter} onChange={e => handleFilterChange(e.target.value)}>
           <option value="">All</option>
           <option value="PENDING">Pending</option>
           <option value="COMPLETED">Completed</option>
@@ -87,11 +87,11 @@ export default function CompAudits() {
         <Modal.Header closeButton><Modal.Title>Review Audit</Modal.Title></Modal.Header>
         <Modal.Body>
           {selected && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 14px', fontSize: 13, color: 'var(--text-2)', marginBottom: 16 }}>
+            <div className="bg-surface border border-border rounded p-3.5 text-sm text-secondary mb-4">
               <strong>Entity:</strong> {formatEnum(selected.entityType)}
-              <span style={{ margin: '0 10px' }}>|</span>
+              <span className="mx-2.5">|</span>
               <strong>Scope:</strong> {selected.scope}
-              <span style={{ margin: '0 10px' }}>|</span>
+              <span className="mx-2.5">|</span>
               <strong>Date:</strong> {selected.auditDate}
             </div>
           )}

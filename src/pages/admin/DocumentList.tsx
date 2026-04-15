@@ -43,10 +43,7 @@ export default function DocumentList() {
     { key: 'docType',            label: 'Document Type', render: item => formatEnum(item.docType) },
     { key: 'verificationStatus', label: 'Verified',
       render: item => (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600,
-          color: item.verificationStatus ? '#16A34A' : '#64748B',
-          background: item.verificationStatus ? 'rgba(22,163,74,0.1)' : 'rgba(100,116,139,0.1)',
-          padding: '2px 9px', borderRadius: 20 }}>
+        <span className={`inline-flex items-center gap-1.25 text-sm font-semibold px-2.5 py-0.5 rounded-full ${item.verificationStatus ? 'bg-success/10 text-success' : 'bg-secondary-100 text-secondary-500'}`}>
           {item.verificationStatus ? 'Verified' : 'Unverified'}
         </span>
       )
@@ -58,7 +55,7 @@ export default function DocumentList() {
       <PageHeader title="Student Documents" subtitle="View and verify uploaded documents" />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             {item.downloadUrl && (
               <a href={item.downloadUrl} target="_blank" rel="noreferrer" className="icon-btn" title="Download">
                 <BsDownload size={13} />

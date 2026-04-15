@@ -85,13 +85,13 @@ export default function ReportCRUD() {
       if (o && typeof o === 'object') {
         const entries = Object.entries(o);
         return entries.length ? (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-            {entries.map(([k, v]) => <span key={k} style={{ fontSize: 11, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 8px', color: 'var(--text-2)' }}>{k}: <strong style={{ color: 'var(--text)' }}>{String(v)}</strong></span>)}
+          <div className="flex flex-wrap gap-1">
+            {entries.map(([k, v]) => <span key={k} className="text-xs bg-bg border border-border rounded px-2 py-0.5 text-secondary">{k}: <strong className="text-base">{String(v)}</strong></span>)}
           </div>
-        ) : <span style={{ color: 'var(--text-3)' }}>—</span>;
+        ) : <span className="text-tertiary">—</span>;
       }
     } catch {}
-    return <span style={{ color: 'var(--text-3)' }}>—</span>;
+    return <span className="text-tertiary">—</span>;
   };
 
   const columns: Column<Report>[] = [
@@ -109,7 +109,7 @@ export default function ReportCRUD() {
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
           </div>
@@ -119,7 +119,7 @@ export default function ReportCRUD() {
       <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)} size="lg">
         <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Report' : 'New Report'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+          <div className="grid grid-cols-2 gap-3.5 mb-5">
             <div>
               <label className="form-label">Scope</label>
               <select className="form-select" value={scope} onChange={e => setScope(e.target.value)}>
@@ -135,13 +135,13 @@ export default function ReportCRUD() {
             </div>
           </div>
 
-          <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 16, marginBottom: 16, background: 'var(--bg)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontSize: 13, fontWeight: 600 }}>Metrics</span>
-              <span style={{ fontSize: 11, color: 'var(--text-2)' }}>{metricRows.filter(r => r.key.trim()).length} entries</span>
+          <div className="border border-border rounded-lg p-4 mb-4 bg-bg">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm font-semibold">Metrics</span>
+              <span className="text-xs text-secondary">{metricRows.filter(r => r.key.trim()).length} entries</span>
             </div>
             {metricRows.map((row, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 32px', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+              <div key={i} className="grid grid-cols-[1fr_1fr_32px] gap-2 mb-2 items-center">
                 <input className="form-control" placeholder="Metric name" value={row.key} onChange={e => updRow(i, 'key', e.target.value)} />
                 <input className="form-control" placeholder="Value" value={row.value} onChange={e => updRow(i, 'value', e.target.value)} />
                 <button className="icon-btn icon-btn-danger" onClick={() => setMetricRows(r => r.filter((_, idx) => idx !== i))} disabled={metricRows.length === 1}><BsDashCircle size={13} /></button>
@@ -167,10 +167,10 @@ export default function ReportCRUD() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete this report?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete this report?</p>
+          <p className="text-xs text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

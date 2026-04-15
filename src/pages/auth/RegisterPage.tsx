@@ -42,49 +42,49 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="auth-right" style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      <div className="auth-box" style={{ maxWidth: 440 }}>
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 11, background: 'var(--blue-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-            <BsMortarboardFill size={20} style={{ color: 'var(--blue)' }} />
+    <div className="auth-right bg-base min-h-screen">
+      <div className="auth-box max-w-sm">
+        <div className="text-center mb-6">
+          <div className="w-11 h-11 rounded-xl bg-blue-dim flex items-center justify-center mx-auto mb-3.5">
+            <BsMortarboardFill size={20} className="text-blue" />
           </div>
-          <h5 style={{ color: 'var(--text)', fontWeight: 700, margin: '0 0 4px', fontSize: 18 }}>Create your account</h5>
-          <p style={{ color: 'var(--text-2)', fontSize: 13, margin: 0 }}>Join EduSphere today</p>
+          <h5 className="text-base font-bold m-0 mb-1">Create your account</h5>
+          <p className="text-xs text-secondary m-0">Join EduSphere today</p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Full Name</label>
             <input type="text" className="form-control" name="name" value={form.name} onChange={handleChange} placeholder="Jane Smith" required />
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Email</label>
             <input type="email" className="form-control" name="email" value={form.email} onChange={handleChange} placeholder="you@example.com" required />
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Password</label>
             <input type="password" minLength={8} className="form-control" name="password" value={form.password} onChange={handleChange} placeholder="Min. 8 characters" required />
           </div>
-          <div style={{ marginBottom: 14 }}>
-            <label className="form-label">Phone <span style={{ color: 'var(--text-3)', fontSize: 12 }}>(optional)</span></label>
+          <div className="mb-3.5">
+            <label className="form-label">Phone <span className="text-xs text-tertiary">(optional)</span></label>
             <input type="text" className="form-control" name="phone" value={form.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" />
           </div>
-          <div style={{ marginBottom: 24 }}>
+          <div className="mb-6">
             <label className="form-label">I am a</label>
             <select className="form-select" name="selectedRole" value={form.selectedRole} onChange={handleChange}>
               <option value={Role.STUDENT}>Student</option>
               <option value={Role.FACULTY}>Faculty Member</option>
             </select>
           </div>
-          <button type="submit" className="btn btn-primary w-100" disabled={loading} style={{ padding: '10px', fontWeight: 600, fontSize: 14 }}>
+          <button type="submit" className="btn btn-primary w-full py-2.5 font-semibold text-sm" disabled={loading}>
             {loading && <span className="spinner-border spinner-border-sm me-2" />}
             {loading ? 'Creating account…' : 'Create Account'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: 20, marginBottom: 0, fontSize: 13, color: 'var(--text-2)' }}>
+        <p className="text-center mt-5 mb-0 text-xs text-secondary">
           Already have an account?{' '}
-          <Link to="/login" style={{ color: 'var(--blue)', fontWeight: 600 }}>Sign in</Link>
+          <Link to="/login" className="font-semibold text-blue">Sign in</Link>
         </p>
       </div>
     </div>

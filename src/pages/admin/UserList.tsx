@@ -102,14 +102,14 @@ export default function UserList() {
     <>
       <PageHeader title="Users" subtitle="Manage system accounts and access"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button className="btn btn-primary btn-sm flex items-center gap-1.5" onClick={openCreate}>
             <BsPersonPlus size={14} /> Create Staff Account
           </button>
         }
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
             <button
               className={`icon-btn ${item.status === 'ACTIVE' ? 'icon-btn-warn' : 'icon-btn-success'}`}
@@ -126,15 +126,15 @@ export default function UserList() {
       <Modal show={modal === 'edit'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>Edit User</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Name</label>
             <input className="form-control" value={name} onChange={e => setName(e.target.value)} />
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Email (read-only)</label>
-            <input className="form-control" value={selected?.email ?? ''} readOnly style={{ opacity: 0.6 }} />
+            <input className="form-control opacity-60" value={selected?.email ?? ''} readOnly />
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Phone</label>
             <input className="form-control" value={phone} onChange={e => setPhone(e.target.value)} />
           </div>
@@ -157,22 +157,22 @@ export default function UserList() {
       <Modal show={modal === 'create'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>Create Staff Account</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Role</label>
             <select className="form-select" value={createRole} onChange={e => setCreateRole(e.target.value as Role)}>
               {STAFF_ROLES.map(r => <option key={r} value={r}>{formatEnum(r)}</option>)}
             </select>
           </div>
-          <div style={{ marginBottom: 14 }}>
-            <label className="form-label">Full Name <span style={{ color: '#EF4444' }}>*</span></label>
+          <div className="mb-3.5">
+            <label className="form-label">Full Name <span className="text-red-600">*</span></label>
             <input className="form-control" value={createName} onChange={e => setCreateName(e.target.value)} placeholder="e.g. Jane Smith" />
           </div>
-          <div style={{ marginBottom: 14 }}>
-            <label className="form-label">Email <span style={{ color: '#EF4444' }}>*</span></label>
+          <div className="mb-3.5">
+            <label className="form-label">Email <span className="text-red-600">*</span></label>
             <input className="form-control" type="email" value={createEmail} onChange={e => setCreateEmail(e.target.value)} placeholder="jane@university.edu" />
           </div>
-          <div style={{ marginBottom: 14 }}>
-            <label className="form-label">Password <span style={{ color: '#EF4444' }}>*</span></label>
+          <div className="mb-3.5">
+            <label className="form-label">Password <span className="text-red-600">*</span></label>
             <input className="form-control" type="password" value={createPassword} onChange={e => setCreatePassword(e.target.value)} placeholder="Temporary password" />
           </div>
           <div>
@@ -189,10 +189,10 @@ export default function UserList() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete "{selected?.name}"?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This action is permanent.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="py-7 text-center">
+          <p className="font-semibold mb-1.5">Delete "{selected?.name}"?</p>
+          <p className="text-base text-secondary mb-6">This action is permanent.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

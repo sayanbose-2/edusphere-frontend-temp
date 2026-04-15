@@ -73,12 +73,12 @@ export default function AuditList() {
         <Modal.Header closeButton><Modal.Title>Review Audit</Modal.Title></Modal.Header>
         <Modal.Body>
           {selected && (
-            <div style={{ marginBottom: 16, padding: '10px 14px', background: 'var(--bg)', borderRadius: 6, fontSize: 13, display: 'flex', gap: 24 }}>
-              <div><span style={{ color: 'var(--text-2)' }}>Entity:</span> <strong>{formatEnum(selected.entityType)}</strong></div>
-              <div><span style={{ color: 'var(--text-2)' }}>Scope:</span> <strong>{selected.scope}</strong></div>
+            <div className="mb-4 p-3 bg-base rounded text-base flex gap-6">
+              <div><span className="text-secondary">Entity:</span> <strong>{formatEnum(selected.entityType)}</strong></div>
+              <div><span className="text-secondary">Scope:</span> <strong>{selected.scope}</strong></div>
             </div>
           )}
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Findings</label>
             <textarea className="form-control" rows={4} value={findings} onChange={e => setFindings(e.target.value)} placeholder="Enter audit findings…" />
           </div>

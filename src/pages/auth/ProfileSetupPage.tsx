@@ -97,10 +97,10 @@ export default function ProfileSetupPage() {
   // ── Loading ───────────────────────────────────────────────────────────────
   if (pageState === 'loading') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
-        <div style={{ textAlign: 'center' }}>
-          <span className="spinner-border" style={{ color: 'var(--blue)', width: 32, height: 32 }} />
-          <p style={{ marginTop: 14, color: 'var(--text-2)', fontSize: 14 }}>Checking your profile…</p>
+      <div className="min-h-screen flex items-center justify-center bg-base">
+        <div className="text-center">
+          <span className="spinner-border w-8 h-8 text-blue" />
+          <p className="mt-3.5 text-secondary text-sm">Checking your profile…</p>
         </div>
       </div>
     );
@@ -109,47 +109,47 @@ export default function ProfileSetupPage() {
   // ── Student — Create Profile ──────────────────────────────────────────────
   if (pageState === 'create-student') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: '24px 16px' }}>
-        <div className="auth-box" style={{ maxWidth: 480 }}>
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--blue-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-              <BsPersonCheck size={22} style={{ color: 'var(--blue)' }} />
+      <div className="min-h-screen flex items-center justify-center bg-base px-4">
+        <div className="auth-box max-w-md">
+          <div className="text-center mb-6">
+            <div className="w-12 h-12 rounded-xl bg-blue-dim flex items-center justify-center mx-auto mb-3.5">
+              <BsPersonCheck size={22} className="text-blue" />
             </div>
-            <h5 style={{ color: 'var(--text)', fontWeight: 700, fontSize: 18, marginBottom: 4 }}>Complete Your Profile</h5>
-            <p style={{ color: 'var(--text-2)', fontSize: 13, margin: 0 }}>
+            <h5 className="text-base text-base font-bold mb-1">Complete Your Profile</h5>
+            <p className="text-xs text-secondary m-0">
               Welcome, {user?.name}! Please fill in a few personal details to get started.
             </p>
           </div>
 
           {/* Read-only identity info from IAM */}
-          <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px', marginBottom: 20, fontSize: 13 }}>
-            <div style={{ color: 'var(--text-3)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Your account details</div>
-            <div style={{ color: 'var(--text)', fontWeight: 500 }}>{user?.name}</div>
+          <div className="bg-subtle border border-light rounded-lg px-3.5 py-3 mb-5 text-sm">
+            <div className="text-xs text-tertiary font-semibold uppercase tracking-wider mb-2">Your account details</div>
+            <div className="text-base font-medium">{user?.name}</div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div className="grid grid-cols-2 gap-3.5 mb-3.5">
             <div>
-              <label className="form-label">Date of Birth <span style={{ color: 'var(--danger)' }}>*</span></label>
+              <label className="form-label">Date of Birth <span className="text-danger">*</span></label>
               <input type="date" className="form-control" value={dob} onChange={e => setDob(e.target.value)} required />
             </div>
             <div>
-              <label className="form-label">Gender <span style={{ color: 'var(--danger)' }}>*</span></label>
+              <label className="form-label">Gender <span className="text-danger">*</span></label>
               <select className="form-select" value={gender} onChange={e => setGender(e.target.value)} required>
                 <option value="">Select gender</option>
                 {Object.values(Gender).map(g => <option key={g} value={g}>{formatEnum(g)}</option>)}
               </select>
             </div>
           </div>
-          <div style={{ marginBottom: 24 }}>
-            <label className="form-label">Address <span style={{ color: 'var(--danger)' }}>*</span></label>
+          <div className="mb-6">
+            <label className="form-label">Address <span className="text-danger">*</span></label>
             <textarea className="form-control" rows={2} value={address} onChange={e => setAddress(e.target.value)} placeholder="Your full address" required />
           </div>
 
-          <button className="btn btn-primary w-100" onClick={handleCreateStudent} disabled={saving} style={{ marginBottom: 10, fontWeight: 600 }}>
+          <button className="btn btn-primary w-full mb-2.5 font-semibold" onClick={handleCreateStudent} disabled={saving}>
             {saving && <span className="spinner-border spinner-border-sm me-2" />}
             Save & Go to Dashboard
           </button>
-          <button className="btn btn-outline-secondary w-100" style={{ fontSize: 13 }} onClick={async () => { await logout(); navigate('/login'); }}>
+          <button className="btn btn-outline-secondary w-full text-xs" onClick={async () => { await logout(); navigate('/login'); }}>
             Sign out
           </button>
         </div>
@@ -160,39 +160,39 @@ export default function ProfileSetupPage() {
   // ── Faculty — Create Profile ──────────────────────────────────────────────
   if (pageState === 'create-faculty') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: '24px 16px' }}>
-        <div className="auth-box" style={{ maxWidth: 480 }}>
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--blue-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-              <BsMortarboardFill size={22} style={{ color: 'var(--blue)' }} />
+      <div className="min-h-screen flex items-center justify-center bg-base px-4">
+        <div className="auth-box max-w-md">
+          <div className="text-center mb-6">
+            <div className="w-12 h-12 rounded-xl bg-blue-dim flex items-center justify-center mx-auto mb-3.5">
+              <BsMortarboardFill size={22} className="text-blue" />
             </div>
-            <h5 style={{ color: 'var(--text)', fontWeight: 700, fontSize: 18, marginBottom: 4 }}>Complete Your Faculty Profile</h5>
-            <p style={{ color: 'var(--text-2)', fontSize: 13, margin: 0 }}>
+            <h5 className="text-base text-base font-bold mb-1">Complete Your Faculty Profile</h5>
+            <p className="text-xs text-secondary m-0">
               Welcome, {user?.name}! Your administrator will assign your department. You can optionally enter your position title below.
             </p>
           </div>
 
           {/* Read-only identity info */}
-          <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px', marginBottom: 20, fontSize: 13 }}>
-            <div style={{ color: 'var(--text-3)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Your account details</div>
-            <div style={{ color: 'var(--text)', fontWeight: 500 }}>{user?.name}</div>
+          <div className="bg-subtle border border-light rounded-lg px-3.5 py-3 mb-5 text-sm">
+            <div className="text-xs text-tertiary font-semibold uppercase tracking-wider mb-2">Your account details</div>
+            <div className="text-base font-medium">{user?.name}</div>
           </div>
 
           {/* Info note about department assignment */}
-          <div style={{ background: 'rgba(234,179,8,0.07)', border: '1px solid rgba(234,179,8,0.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, fontSize: 13, color: 'var(--text-2)' }}>
+          <div className="rounded-lg p-3.5 mb-5 text-sm border border-yellow-200/40 bg-yellow-400/[0.07] text-secondary">
             Your department will be assigned by your administrator. You can update your position title at any time from your profile.
           </div>
 
-          <div style={{ marginBottom: 24 }}>
-            <label className="form-label">Position / Title <span style={{ color: 'var(--text-3)', fontSize: 12 }}>(optional)</span></label>
+          <div className="mb-6">
+            <label className="form-label">Position / Title <span className="text-xs text-tertiary">(optional)</span></label>
             <input className="form-control" value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Associate Professor" />
           </div>
 
-          <button className="btn btn-primary w-100" onClick={handleCreateFaculty} disabled={saving} style={{ marginBottom: 10, fontWeight: 600 }}>
+          <button className="btn btn-primary w-full mb-2.5 font-semibold" onClick={handleCreateFaculty} disabled={saving}>
             {saving && <span className="spinner-border spinner-border-sm me-2" />}
             Save & Go to Dashboard
           </button>
-          <button className="btn btn-outline-secondary w-100" style={{ fontSize: 13 }} onClick={async () => { await logout(); navigate('/login'); }}>
+          <button className="btn btn-outline-secondary w-full text-xs" onClick={async () => { await logout(); navigate('/login'); }}>
             Sign out
           </button>
         </div>

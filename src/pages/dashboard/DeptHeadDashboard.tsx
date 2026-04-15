@@ -13,13 +13,13 @@ function dateStr() {
 }
 
 const sections = [
-  { label: 'My Department',  desc: 'Department details and profile',     icon: <BsBuilding size={18} />,            color: '#2563EB', bg: 'rgba(37,99,235,0.08)',   path: '/dept/department' },
-  { label: 'Faculty',        desc: 'Manage department faculty members',  icon: <BsPersonBadge size={18} />,         color: '#16A34A', bg: 'rgba(22,163,74,0.08)',   path: '/dept/faculty' },
-  { label: 'Courses',        desc: 'Oversee department courses',         icon: <BsBook size={18} />,                color: '#0284C7', bg: 'rgba(2,132,199,0.08)',   path: '/dept/courses' },
-  { label: 'Curriculum',     desc: 'Review curriculum structure',        icon: <BsJournalText size={18} />,         color: '#7C3AED', bg: 'rgba(124,58,237,0.08)',  path: '/dept/curriculum' },
-  { label: 'Workloads',      desc: 'Review and assign faculty workload', icon: <BsBriefcase size={18} />,           color: '#D97706', bg: 'rgba(217,119,6,0.08)',   path: '/dept/workloads' },
-  { label: 'Compliance',     desc: 'Monitor compliance status',          icon: <BsClipboard2Check size={18} />,     color: '#DC2626', bg: 'rgba(220,38,38,0.08)',   path: '/dept/compliance' },
-  { label: 'Reports',        desc: 'Generate and view reports',          icon: <BsFileEarmarkBarGraph size={18} />, color: '#64748B', bg: 'rgba(100,116,139,0.08)', path: '/dept/reports' },
+  { label: 'My Department',  desc: 'Department details and profile',     icon: <BsBuilding size={18} />,            tw: 'bg-blue-dim text-blue',         path: '/dept/department' },
+  { label: 'Faculty',        desc: 'Manage department faculty members',  icon: <BsPersonBadge size={18} />,         tw: 'bg-success/10 text-success',    path: '/dept/faculty' },
+  { label: 'Courses',        desc: 'Oversee department courses',         icon: <BsBook size={18} />,                tw: 'bg-info/10 text-info',          path: '/dept/courses' },
+  { label: 'Curriculum',     desc: 'Review curriculum structure',        icon: <BsJournalText size={18} />,         tw: 'bg-purple-100/60 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400', path: '/dept/curriculum' },
+  { label: 'Workloads',      desc: 'Review and assign faculty workload', icon: <BsBriefcase size={18} />,           tw: 'bg-warning/10 text-warning',    path: '/dept/workloads' },
+  { label: 'Compliance',     desc: 'Monitor compliance status',          icon: <BsClipboard2Check size={18} />,     tw: 'bg-danger/10 text-danger',      path: '/dept/compliance' },
+  { label: 'Reports',        desc: 'Generate and view reports',          icon: <BsFileEarmarkBarGraph size={18} />, tw: 'bg-secondary-100 text-secondary-500 dark:bg-secondary-800 dark:text-secondary-400', path: '/dept/reports' },
 ];
 
 export default function DeptHeadDashboard() {
@@ -28,29 +28,29 @@ export default function DeptHeadDashboard() {
 
   return (
     <>
-      <div className="welcome-banner" style={{ background: 'linear-gradient(135deg, #4A044E 0%, #86198F 60%, #A21CAF 100%)', color: '#fff' }}>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ margin: '0 0 5px', fontSize: 11, opacity: 0.55, letterSpacing: 0.5, textTransform: 'uppercase' }}>{dateStr()}</p>
-          <h2 style={{ margin: '0 0 5px', fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>
+      <div className="welcome-banner welcome-banner--dept-head">
+        <div className="relative z-10">
+          <p className="m-0 text-xs opacity-55 tracking-wide uppercase">{dateStr()}</p>
+          <h2 className="m-0 text-3xl font-black tracking-tight -ml-0.5">
             {greet()}, {user?.name?.split(' ')[0]}
           </h2>
-          <p style={{ margin: 0, fontSize: 13, opacity: 0.6 }}>Department Head · Manage your department</p>
+          <p className="m-0 text-base opacity-60">Department Head · Manage your department</p>
         </div>
-        <BsBuilding size={56} style={{ opacity: 0.08 }} />
+        <BsBuilding size={56} className="opacity-8" />
       </div>
 
-      <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.8 }}>Department Management</p>
+      <p className="text-xs font-bold text-tertiary mb-3.5 uppercase tracking-wider">Department Management</p>
 
       <Row className="g-3">
         {sections.map(card => (
           <Col key={card.label} xs={12} sm={6} lg={4} xl={3}>
             <div className="feature-card" onClick={() => navigate(card.path)}>
-              <div style={{ width: 40, height: 40, borderRadius: 9, background: card.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color, marginBottom: 14 }}>
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3.5 ${card.tw}`}>
                 {card.icon}
               </div>
-              <h6 style={{ margin: '0 0 5px', fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{card.label}</h6>
-              <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5 }}>{card.desc}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: card.color, fontWeight: 600 }}>
+              <h6 className="m-0 font-bold text-base text-base mb-1">{card.label}</h6>
+              <p className="m-0 text-sm text-secondary leading-relaxed mb-4">{card.desc}</p>
+              <div className={`flex items-center gap-1 text-sm font-semibold ${card.tw.split(' ').find(c => c.startsWith('text-'))}`}>
                 Open <BsArrowRight size={11} />
               </div>
             </div>

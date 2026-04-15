@@ -49,22 +49,21 @@ export default function NotificationSender() {
     <button
       key={val}
       onClick={() => setTarget(val)}
-      style={{
-        padding: '6px 16px', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-        border: `1px solid ${target === val ? 'var(--blue)' : 'var(--border)'}`,
-        background: target === val ? 'var(--blue-dim)' : 'transparent',
-        color: target === val ? 'var(--blue)' : 'var(--text-2)',
-      }}
+      className={`px-4 py-1.5 rounded text-sm font-semibold cursor-pointer border transition-colors ${
+        target === val
+          ? 'bg-blue-dim border-blue text-blue'
+          : 'bg-transparent border-border text-secondary'
+      }`}
     >{label}</button>
   );
 
   return (
     <>
       <PageHeader title="Send Notifications" subtitle="Broadcast messages to users, roles, or everyone" />
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '28px 32px', maxWidth: 560, boxShadow: 'var(--shadow)' }}>
-        <div style={{ marginBottom: 20 }}>
+      <div className="bg-surface border border-border rounded-lg p-7 max-w-xl shadow-var-sm">
+        <div className="mb-5">
           <label className="form-label">Target audience</label>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="flex gap-2">
             {tgtBtn('all',  'Broadcast All')}
             {tgtBtn('user', 'Specific User')}
             {tgtBtn('role', 'By Role')}
@@ -72,7 +71,7 @@ export default function NotificationSender() {
         </div>
 
         {target === 'user' && (
-          <div style={{ marginBottom: 16 }}>
+          <div className="mb-4">
             <label className="form-label">Select User</label>
             <select className="form-select" value={userId} onChange={e => setUserId(e.target.value)}>
               <option value="">Select a user</option>
@@ -82,7 +81,7 @@ export default function NotificationSender() {
         )}
 
         {target === 'role' && (
-          <div style={{ marginBottom: 16 }}>
+          <div className="mb-4">
             <label className="form-label">Select Role</label>
             <select className="form-select" value={role} onChange={e => setRole(e.target.value)}>
               {Object.values(Role).map(r => <option key={r} value={r}>{formatEnum(r)}</option>)}
@@ -90,19 +89,19 @@ export default function NotificationSender() {
           </div>
         )}
 
-        <div style={{ marginBottom: 16 }}>
+        <div className="mb-4">
           <label className="form-label">Category</label>
           <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
             {Object.values(NotificationType).map(t => <option key={t} value={t}>{formatEnum(t)}</option>)}
           </select>
         </div>
 
-        <div style={{ marginBottom: 24 }}>
+        <div className="mb-6">
           <label className="form-label">Message</label>
           <textarea className="form-control" rows={5} value={message} onChange={e => setMessage(e.target.value)} placeholder="Enter notification message…" />
         </div>
 
-        <button className="btn btn-primary" onClick={handleSend} disabled={sending} style={{ fontWeight: 600, padding: '9px 24px' }}>
+        <button className="btn btn-primary font-semibold py-2 px-6" onClick={handleSend} disabled={sending}>
           {sending && <span className="spinner-border spinner-border-sm me-2" />}
           {sending ? 'Sending…' : 'Send Notification'}
         </button>

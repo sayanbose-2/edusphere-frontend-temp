@@ -110,7 +110,7 @@ export default function ComplianceCRUD() {
 
   const columns: Column<ComplianceRecord>[] = [
     { key: 'entityType', label: 'Entity Type', render: item => formatEnum(item.entityType) },
-    { key: 'entityId',   label: 'Entity', render: item => entityNameMap[item.entityId] ?? <span style={{ color: 'var(--text-3)', fontStyle: 'italic' }}>—</span> },
+    { key: 'entityId',   label: 'Entity', render: item => entityNameMap[item.entityId] ?? <span className="text-tertiary italic">—</span> },
     { key: 'complianceType', label: 'Compliance Type', render: item => formatEnum(item.complianceType) },
     { key: 'notes',      label: 'Notes', render: item => item.notes.length > 50 ? item.notes.slice(0, 50) + '…' : item.notes },
     { key: 'result',     label: 'Result', render: item => <StatusBadge status={item.result} /> },
@@ -124,7 +124,7 @@ export default function ComplianceCRUD() {
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
           </div>
@@ -134,26 +134,26 @@ export default function ComplianceCRUD() {
       <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)} size="lg">
         <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Record' : 'New Compliance Record'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Entity Type</label>
             <select className="form-select" value={entityType} onChange={e => { setEntityType(e.target.value); setEntityId(''); fetchEntities(e.target.value); }}>
               {Object.values(ComplianceEntityType).map(t => <option key={t} value={t}>{formatEnum(t)}</option>)}
             </select>
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Entity</label>
             <select className="form-select" value={entityId} onChange={e => setEntityId(e.target.value)} disabled={entitiesLoading}>
               <option value="">{entitiesLoading ? 'Loading…' : `Select ${formatEnum(entityType)}`}</option>
               {entityList.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
             </select>
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Compliance Type</label>
             <select className="form-select" value={complianceType} onChange={e => setComplianceType(e.target.value)}>
               {Object.values(ComplianceType).map(t => <option key={t} value={t}>{formatEnum(t)}</option>)}
             </select>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div className="grid grid-cols-2 gap-3.5 mb-3.5">
             <div>
               <label className="form-label">Result</label>
               <select className="form-select" value={result} onChange={e => setResult(e.target.value)}>
@@ -179,10 +179,10 @@ export default function ComplianceCRUD() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete this record?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete this record?</p>
+          <p className="text-xs text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

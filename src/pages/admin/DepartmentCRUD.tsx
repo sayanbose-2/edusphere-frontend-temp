@@ -110,7 +110,7 @@ export default function DepartmentCRUD() {
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
             <button className="icon-btn icon-btn-success" onClick={() => { setSelected(item); setHeadId(''); setModal('assign'); }} title="Assign Head"><BsPersonCheck size={14} /></button>
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
@@ -121,15 +121,15 @@ export default function DepartmentCRUD() {
       <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Department' : 'New Department'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Department Name</label>
             <input className="form-control" value={departmentName} onChange={e => setDepartmentName(e.target.value)} placeholder="e.g. Computer Science" />
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Department Code</label>
             <input className="form-control" value={departmentCode} onChange={e => setDepartmentCode(e.target.value)} placeholder="e.g. CS" />
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Contact Info</label>
             <input className="form-control" value={contactInfo} onChange={e => setContactInfo(e.target.value)} placeholder="Email or phone" />
           </div>
@@ -152,7 +152,7 @@ export default function DepartmentCRUD() {
       <Modal show={modal === 'assign'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>Assign Department Head</Modal.Title></Modal.Header>
         <Modal.Body>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 14 }}>Assign head for <strong>{selected?.departmentName}</strong></p>
+          <p className="text-xs text-secondary mb-3.5">Assign head for <strong>{selected?.departmentName}</strong></p>
           <label className="form-label">Select Faculty</label>
           <select className="form-select" value={headId} onChange={e => setHeadId(e.target.value)}>
             <option value="">Select faculty member</option>
@@ -161,7 +161,7 @@ export default function DepartmentCRUD() {
             ))}
           </select>
           {faculties.filter(f => f.departmentId === selected?.id).length === 0 && (
-            <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 8 }}>No faculty members in this department yet. Add faculty first.</p>
+            <p className="text-xs text-tertiary mt-2">No faculty members in this department yet. Add faculty first.</p>
           )}
         </Modal.Body>
         <Modal.Footer>
@@ -171,10 +171,10 @@ export default function DepartmentCRUD() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete "{selected?.departmentName}"?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete "{selected?.departmentName}"?</p>
+          <p className="text-xs text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

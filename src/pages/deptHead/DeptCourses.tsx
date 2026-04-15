@@ -91,7 +91,7 @@ export default function DeptCourses() {
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
             <button
               className={`icon-btn ${item.status === 'ACTIVE' ? 'icon-btn-warn' : 'icon-btn-success'}`}
@@ -108,18 +108,18 @@ export default function DeptCourses() {
       <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Course' : 'Create Course'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Title</label>
             <input className="form-control" value={title} onChange={e => setTitle(e.target.value)} />
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Department</label>
             <select className="form-select" value={departmentId} onChange={e => setDepartmentId(e.target.value)}>
               <option value="">Select department</option>
               {departments.map(d => <option key={d.id} value={d.id}>{d.departmentName}</option>)}
             </select>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div className="grid grid-cols-2 gap-3.5">
             <div>
               <label className="form-label">Credits</label>
               <input type="number" className="form-control" value={credits} onChange={e => setCredits(Number(e.target.value))} min={0} />
@@ -139,10 +139,10 @@ export default function DeptCourses() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete "{selected?.title}"?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete "{selected?.title}"?</p>
+          <p className="text-sm text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

@@ -123,7 +123,7 @@ export default function StudentCRUD() {
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} title="Edit profile"><BsPencil size={13} /></button>
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
           </div>
@@ -137,31 +137,31 @@ export default function StudentCRUD() {
         </Modal.Header>
         <Modal.Body>
           {/* Info banner */}
-          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', marginBottom: 20, fontSize: 13, color: 'var(--text-2)' }}>
-            <BsInfoCircle size={15} style={{ color: 'var(--blue)', flexShrink: 0, marginTop: 1 }} />
+          <div className="flex gap-2.5 items-start rounded-lg p-3 mb-5 text-sm border bg-bg-2 border-border text-secondary">
+            <BsInfoCircle size={15} className="flex-shrink-0 mt-0.5 text-blue" />
             <span>
               Create the login account here and share the credentials with the student.
               They will fill in their personal details (date of birth, gender, address) on their first login.
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div className="grid grid-cols-2 gap-3.5 mb-3.5">
             <div>
-              <label className="form-label">Full Name <span style={{ color: 'var(--danger)' }}>*</span></label>
+              <label className="form-label">Full Name <span className="inline text-danger">*</span></label>
               <input className="form-control" value={name} onChange={e => setName(e.target.value)} placeholder="Student name" required />
             </div>
             <div>
-              <label className="form-label">Email <span style={{ color: 'var(--danger)' }}>*</span></label>
+              <label className="form-label">Email <span className="inline" >*</span></label>
               <input type="email" className="form-control" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div className="grid grid-cols-2 gap-3.5">
             <div>
-              <label className="form-label">Password <span style={{ color: 'var(--danger)' }}>*</span></label>
+              <label className="form-label">Password <span className="inline" >*</span></label>
               <input type="password" className="form-control" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 characters" required />
             </div>
             <div>
-              <label className="form-label">Phone <span style={{ color: 'var(--text-3)', fontSize: 12 }}></span></label>
+              <label className="form-label">Phone <span className="text-xs text-tertiary"></span></label>
               <input className="form-control" value={phone} onChange={e => setPhone(e.target.value)} />
             </div>
           </div>
@@ -181,14 +181,14 @@ export default function StudentCRUD() {
         </Modal.Header>
         <Modal.Body>
           {/* Read-only IAM info */}
-          <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', marginBottom: 18, fontSize: 13 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <div><span style={{ color: 'var(--text-3)' }}>Name</span><br /><span style={{ color: 'var(--text)', fontWeight: 500 }}>{selected?.name}</span></div>
-              <div><span style={{ color: 'var(--text-3)' }}>Email</span><br /><span style={{ color: 'var(--text)', fontWeight: 500 }}>{selected?.email}</span></div>
+          <div className="rounded p-3.5 mb-4.5 text-sm border border-border bg-bg-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div><span className="text-xs text-tertiary">Name</span><br /><span className="font-medium text-base">{selected?.name}</span></div>
+              <div><span className="text-xs text-tertiary">Email</span><br /><span className="font-medium text-base">{selected?.email}</span></div>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div className="grid grid-cols-2 gap-3.5 mb-3.5">
             <div>
               <label className="form-label">Date of Birth</label>
               <input type="date" className="form-control" value={dob} onChange={e => setDob(e.target.value)} />
@@ -216,10 +216,10 @@ export default function StudentCRUD() {
 
       {/* Delete confirmation */}
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete "{selected?.name}"?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This will also remove their login account. This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete "{selected?.name}"?</p>
+          <p className="text-xs text-secondary mb-6">This will also remove their login account. This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

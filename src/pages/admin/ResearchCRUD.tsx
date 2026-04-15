@@ -118,27 +118,27 @@ export default function ResearchCRUD() {
       key: 'facultyMembersIdList',
       label: 'Co-Investigators',
       render: item => item.facultyMembersIdList?.length
-        ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        ? <div className="flex flex-wrap gap-1">
             {item.facultyMembersIdList.map(id => (
-              <span key={id} style={{ fontSize: 11, background: 'rgba(59,130,246,0.1)', color: 'var(--blue)', borderRadius: 12, padding: '2px 8px', fontWeight: 600 }}>
+              <span key={id} className="text-xs bg-blue/10 text-blue rounded-full px-2 py-0.5 font-semibold">
                 {facultyName(id)}
               </span>
             ))}
           </div>
-        : <span style={{ color: 'var(--text-2)', fontSize: 12 }}>None</span>,
+        : <span className="text-secondary text-sm">None</span>,
     },
     {
       key: 'studentsList',
       label: 'Students',
       render: item => item.studentsList?.length
-        ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        ? <div className="flex flex-wrap gap-1">
             {item.studentsList.map(id => (
-              <span key={id} style={{ fontSize: 11, background: 'rgba(22,163,74,0.1)', color: '#16A34A', borderRadius: 12, padding: '2px 8px', fontWeight: 600 }}>
+              <span key={id} className="text-xs bg-green-600/10 text-green-600 rounded-full px-2 py-0.5 font-semibold">
                 {studentName(id)}
               </span>
             ))}
           </div>
-        : <span style={{ color: 'var(--text-2)', fontSize: 12 }}>None</span>,
+        : <span className="text-secondary text-sm">None</span>,
     },
     { key: 'status',    label: 'Status', render: item => <StatusBadge status={item.status} /> },
   ];
@@ -150,7 +150,7 @@ export default function ResearchCRUD() {
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn icon-btn-success" onClick={() => { setSelected(item); setAddId(''); setModal('manageFaculty'); }} title="Manage co-investigators"><BsPersonPlus size={13} /></button>
             <button className="icon-btn" onClick={() => { setSelected(item); setAddId(''); setModal('manageStudent'); }} title="Manage students"><BsMortarboard size={13} /></button>
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
@@ -162,18 +162,18 @@ export default function ResearchCRUD() {
       <Modal show={modal === 'create'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>New Research Project</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Title</label>
             <input className="form-control" value={title} onChange={e => setTitle(e.target.value)} placeholder="Project title" />
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Faculty Lead</label>
             <select className="form-select" value={facultyId} onChange={e => setFacultyId(e.target.value)}>
               <option value="">Select faculty lead</option>
               {faculties.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div className="grid grid-cols-2 gap-3.5 mb-3.5">
             <div>
               <label className="form-label">Start Date</label>
               <input type="date" className="form-control" value={startDate} onChange={e => setStartDate(e.target.value)} />
@@ -203,32 +203,32 @@ export default function ResearchCRUD() {
         <Modal.Header closeButton><Modal.Title>Co-Investigators — {selected?.title}</Modal.Title></Modal.Header>
         <Modal.Body>
           {/* Current members */}
-          <div style={{ marginBottom: 16 }}>
+          <div className="mb-4">
             <label className="form-label">Current Co-Investigators</label>
             {selected?.facultyMembersIdList?.length ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className="flex flex-col gap-1.5">
                 {selected.facultyMembersIdList.map(id => (
-                  <div key={id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 12px' }}>
-                    <span style={{ fontSize: 13 }}>{facultyName(id)}</span>
+                  <div key={id} className="flex justify-between items-center bg-surface border border-border rounded p-1.5">
+                    <span className="text-base">{facultyName(id)}</span>
                     <button className="icon-btn icon-btn-danger" onClick={() => handleRemoveFaculty(id)} title="Remove"><BsXCircle size={13} /></button>
                   </div>
                 ))}
               </div>
             ) : (
-              <p style={{ fontSize: 13, color: 'var(--text-2)' }}>No co-investigators assigned.</p>
+              <p className="text-base text-secondary">No co-investigators assigned.</p>
             )}
           </div>
           {/* Add new */}
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
+          <div className="border-t border-border pt-3.5">
             <label className="form-label">Add Co-Investigator</label>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="flex gap-2">
               <select className="form-select" value={addId} onChange={e => setAddId(e.target.value)}>
                 <option value="">Select faculty member</option>
                 {faculties.filter(f => !selected?.facultyMembersIdList?.includes(f.id)).map(f => (
                   <option key={f.id} value={f.id}>{f.name}</option>
                 ))}
               </select>
-              <button className="btn btn-primary btn-sm" onClick={handleAddFaculty} disabled={saving || !addId} style={{ whiteSpace: 'nowrap' }}>
+              <button className="btn btn-primary btn-sm whitespace-nowrap" onClick={handleAddFaculty} disabled={saving || !addId}>
                 {saving && <span className="spinner-border spinner-border-sm me-2" />}Add
               </button>
             </div>
@@ -244,32 +244,32 @@ export default function ResearchCRUD() {
         <Modal.Header closeButton><Modal.Title>Students — {selected?.title}</Modal.Title></Modal.Header>
         <Modal.Body>
           {/* Current students */}
-          <div style={{ marginBottom: 16 }}>
+          <div className="mb-4">
             <label className="form-label">Current Students</label>
             {selected?.studentsList?.length ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className="flex flex-col gap-1.5">
                 {selected.studentsList.map(id => (
-                  <div key={id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 12px' }}>
-                    <span style={{ fontSize: 13 }}>{studentName(id)}</span>
+                  <div key={id} className="flex justify-between items-center bg-surface border border-border rounded p-1.5">
+                    <span className="text-base">{studentName(id)}</span>
                     <button className="icon-btn icon-btn-danger" onClick={() => handleRemoveStudent(id)} title="Remove"><BsXCircle size={13} /></button>
                   </div>
                 ))}
               </div>
             ) : (
-              <p style={{ fontSize: 13, color: 'var(--text-2)' }}>No students assigned.</p>
+              <p className="text-base text-secondary">No students assigned.</p>
             )}
           </div>
           {/* Add new */}
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
+          <div className="border-t border-border pt-3.5">
             <label className="form-label">Add Student</label>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="flex gap-2">
               <select className="form-select" value={addId} onChange={e => setAddId(e.target.value)}>
                 <option value="">Select student</option>
                 {students.filter(s => !selected?.studentsList?.includes(s.id)).map(s => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </select>
-              <button className="btn btn-primary btn-sm" onClick={handleAddStudent} disabled={saving || !addId} style={{ whiteSpace: 'nowrap' }}>
+              <button className="btn btn-primary btn-sm whitespace-nowrap" onClick={handleAddStudent} disabled={saving || !addId}>
                 {saving && <span className="spinner-border spinner-border-sm me-2" />}Add
               </button>
             </div>
@@ -282,10 +282,10 @@ export default function ResearchCRUD() {
 
       {/* Delete Modal */}
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete "{selected?.title}"?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete "{selected?.title}"?</p>
+          <p className="text-base text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

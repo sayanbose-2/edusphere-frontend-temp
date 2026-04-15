@@ -5,12 +5,11 @@ import { TopNavbar } from './TopNavbar';
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
-  const sidebarW = collapsed ? 56 : 252;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar collapsed={collapsed} width={sidebarW} />
-      <div style={{ marginLeft: sidebarW, flex: 1, transition: 'margin-left 0.2s ease', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+    <div className="flex min-h-screen">
+      <Sidebar collapsed={collapsed} />
+      <div className={`flex flex-col flex-1 transition-all duration-200 ${collapsed ? 'ml-14' : 'ml-[252px]'}`}>
         <TopNavbar onToggleSidebar={() => setCollapsed(c => !c)} />
         <main className="page-content">
           <Outlet />

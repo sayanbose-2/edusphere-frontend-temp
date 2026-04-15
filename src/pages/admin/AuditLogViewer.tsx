@@ -38,9 +38,9 @@ export default function AuditLogViewer() {
   return (
     <>
       <PageHeader title="Audit Logs" subtitle="System activity log — read only" />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <label className="form-label" style={{ marginBottom: 0, whiteSpace: 'nowrap' }}>Filter by severity</label>
-        <select className="form-select form-select-sm" value={severityFilter} onChange={e => setSeverityFilter(e.target.value)} style={{ maxWidth: 160 }}>
+      <div className="flex items-center gap-2.5 mb-4">
+        <label className="form-label m-0 whitespace-nowrap">Filter by severity</label>
+        <select className="form-select form-select-sm max-w-40" value={severityFilter} onChange={e => setSeverityFilter(e.target.value)}>
           <option value="">All</option>
           <option value="INFO">Info</option>
           <option value="WARN">Warn</option>

@@ -69,11 +69,11 @@ export default function MyThesis() {
       <Modal show={modal} onHide={() => setModal(false)} size="lg">
         <Modal.Header closeButton><Modal.Title>Submit New Thesis</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Title</label>
             <input className="form-control" value={title} onChange={e => setTitle(e.target.value)} placeholder="Enter thesis title" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div className="grid grid-cols-2 gap-3.5">
             <div>
               <label className="form-label">Submission Date</label>
               <input type="date" className="form-control" value={submissionDate} onChange={e => setSubmissionDate(e.target.value)} />

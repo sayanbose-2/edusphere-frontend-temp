@@ -111,7 +111,7 @@ export default function DeptCurriculum() {
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
           </div>
@@ -121,41 +121,41 @@ export default function DeptCurriculum() {
       <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)} size="lg">
         <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Curriculum' : 'Create Curriculum'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
-            <label className="form-label">Course</label>
+          <div className="mb-3.5">
+            <label className="form-label">Name</label>
             <select className="form-select" value={courseId} onChange={e => setCourseId(e.target.value)}>
               <option value="">Select course</option>
               {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Description</label>
             <input className="form-control" value={description} onChange={e => setDescription(e.target.value)} placeholder="Overall curriculum description" />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <label className="form-label mb-0" style={{ fontWeight: 600 }}>Modules</label>
+          <div className="flex justify-between items-center mb-2.5">
+            <label className="form-label mb-0 font-semibold">Modules</label>
             <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => setModules(p => [...p, emptyModule()])}>
               <BsPlus className="me-1" />Add Module
             </button>
           </div>
           {modules.map((mod, i) => (
-            <div key={i} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: '14px 16px', marginBottom: 12, background: 'var(--surface)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Module {i + 1}</span>
+            <div key={i} className="border border-border rounded-lg p-4 mb-3 bg-surface">
+              <div className="flex justify-between items-center mb-2.5">
+                <span className="text-sm font-bold text-secondary uppercase tracking-widest">Module {i + 1}</span>
                 <button type="button" className="icon-btn icon-btn-danger" onClick={() => setModules(p => p.length > 1 ? p.filter((_, idx) => idx !== i) : p)} disabled={modules.length === 1}><BsDashCircle size={13} /></button>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+              <div className="grid grid-cols-2 gap-2.5 mb-2.5">
                 <div>
-                  <label className="form-label" style={{ fontSize: 12 }}>Title</label>
+                  <label className="form-label text-sm">Title</label>
                   <input className="form-control form-control-sm" value={mod.title} onChange={e => updateModule(i, 'title', e.target.value)} placeholder="e.g. Introduction" />
                 </div>
                 <div>
-                  <label className="form-label" style={{ fontSize: 12 }}>Topics <span style={{ color: 'var(--text-2)', fontWeight: 400 }}>(comma-separated)</span></label>
+                  <label className="form-label text-sm">Topics <span className="text-secondary font-normal">(comma-separated)</span></label>
                   <input className="form-control form-control-sm" value={mod.topics} onChange={e => updateModule(i, 'topics', e.target.value)} placeholder="e.g. Variables, Loops" />
                 </div>
               </div>
               <div>
-                <label className="form-label" style={{ fontSize: 12 }}>Description</label>
+                <label className="form-label text-sm">Description</label>
                 <input className="form-control form-control-sm" value={mod.description} onChange={e => updateModule(i, 'description', e.target.value)} placeholder="Brief description" />
               </div>
             </div>
@@ -170,10 +170,10 @@ export default function DeptCurriculum() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete this curriculum?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete this curriculum?</p>
+          <p className="text-base text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

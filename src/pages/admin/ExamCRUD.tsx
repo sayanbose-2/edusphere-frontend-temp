@@ -85,8 +85,8 @@ export default function ExamCRUD() {
   const columns: Column<Exam>[] = [
     { key: 'courseId', label: 'Exam', render: item => (
       <span>
-        <span style={{ fontWeight: 500 }}>{courseName(item.courseId)}</span>
-        <span style={{ margin: '0 6px', color: 'var(--text-3)' }}>·</span>
+        <span className="font-medium">{courseName(item.courseId)}</span>
+        <span className="mx-1.5 text-tertiary">·</span>
         <StatusBadge status={item.type} />
       </span>
     )},
@@ -101,7 +101,7 @@ export default function ExamCRUD() {
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             {item.status === Status.ACTIVE && isPastExam(item) && (
               <button
                 className="icon-btn icon-btn-success"
@@ -122,14 +122,14 @@ export default function ExamCRUD() {
       <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Exam' : 'New Exam'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Course</label>
             <select className="form-select" value={courseId} onChange={e => setCourseId(e.target.value)}>
               <option value="">Select course</option>
               {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div className="grid grid-cols-2 gap-3.5">
             <div>
               <label className="form-label">Type</label>
               <select className="form-select" value={type} onChange={e => setType(e.target.value as ExamType)}>
@@ -146,7 +146,7 @@ export default function ExamCRUD() {
                 onChange={e => setDate(e.target.value)}
               />
               {modal === 'create' && (
-                <small style={{ fontSize: 11, color: 'var(--text-3)' }}>Must be today or a future date</small>
+                <small className="text-xs text-tertiary">Must be today or a future date</small>
               )}
             </div>
           </div>
@@ -160,17 +160,17 @@ export default function ExamCRUD() {
       </Modal>
 
       {/* Mark Complete Confirmation */}
-      <Modal show={modal === 'complete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <BsCheckCircle size={32} style={{ color: 'var(--success)', marginBottom: 12 }} />
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Mark exam as completed?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 4 }}>
+      <Modal show={modal === 'complete'} onHide={() => setModal(null)} size="sm" centered>
+        <Modal.Body className="p-7 text-center">
+          <BsCheckCircle size={32} className="text-success mb-3 mx-auto" />
+          <p className="font-semibold mb-1.5">Mark exam as completed?</p>
+          <p className="text-base text-secondary mb-1">
             {courseName(selected?.courseId || '')} — {selected && formatEnum(selected.type)}
           </p>
-          <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 24 }}>
+          <p className="text-sm text-tertiary mb-6">
             Grades can be submitted once the exam is marked completed.
           </p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-success btn-sm" onClick={handleMarkComplete} disabled={saving}>
               {saving && <span className="spinner-border spinner-border-sm me-2" />}Mark Completed
@@ -180,10 +180,10 @@ export default function ExamCRUD() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete this exam?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete this exam?</p>
+          <p className="text-xs text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

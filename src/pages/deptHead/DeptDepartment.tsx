@@ -73,8 +73,8 @@ export default function DeptDepartment() {
     return (
       <>
         <PageHeader title="My Department" subtitle="Department details" />
-        <div style={{ textAlign: 'center', padding: '48px 0' }}>
-          <span className="spinner-border" style={{ color: 'var(--blue)' }} />
+        <div className="text-center py-12">
+          <span className="spinner-border text-blue" />
         </div>
       </>
     );
@@ -84,7 +84,7 @@ export default function DeptDepartment() {
     return (
       <>
         <PageHeader title="My Department" subtitle="Department details" />
-        <div style={{ textAlign: 'center', color: 'var(--text-2)', padding: '48px 0', fontSize: 14 }}>
+        <div className="text-center text-secondary py-12 text-base">
           No department is currently assigned to you.
         </div>
       </>
@@ -95,19 +95,19 @@ export default function DeptDepartment() {
     <>
       <PageHeader title="My Department" subtitle="View and manage your department"
         action={
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="flex gap-2">
             <button className="btn btn-outline-primary btn-sm" onClick={openEdit}><BsPencil className="me-1" />Edit</button>
             <button className="btn btn-outline-secondary btn-sm" onClick={() => { setHeadId(''); setModal('assignHead'); }}><BsPersonPlus className="me-1" />Change Head</button>
           </div>
         }
       />
 
-      <div style={{ maxWidth: 640, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-          <BsBuilding size={22} style={{ color: 'var(--blue)' }} />
-          <span style={{ fontSize: 17, fontWeight: 700 }}>{myDept.departmentName}</span>
+      <div className="max-w-xl bg-surface border border-border rounded-xl p-6">
+        <div className="flex items-center gap-2.5 mb-5">
+          <BsBuilding size={22} className="text-blue" />
+          <span className="text-lg font-bold">{myDept.departmentName}</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+        <div className="grid grid-cols-2 gap-4.5">
           {[
             { label: 'Department Code', value: myDept.departmentCode },
             { label: 'Status', value: <StatusBadge status={myDept.status} /> },
@@ -117,8 +117,8 @@ export default function DeptDepartment() {
             { label: 'Last Updated', value: new Date(myDept.updatedAt).toLocaleDateString() },
           ].map(({ label, value }) => (
             <div key={label}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div>
-              <div style={{ fontSize: 14 }}>{value}</div>
+              <div className="text-xs font-bold text-secondary uppercase tracking-widest mb-1">{label}</div>
+              <div className="text-base">{value}</div>
             </div>
           ))}
         </div>
@@ -127,15 +127,15 @@ export default function DeptDepartment() {
       <Modal show={modal === 'edit'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>Edit Department</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Department Name</label>
             <input className="form-control" value={departmentName} onChange={e => setDepartmentName(e.target.value)} />
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Department Code</label>
             <input className="form-control" value={departmentCode} onChange={e => setDepartmentCode(e.target.value)} />
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Contact Info</label>
             <input className="form-control" value={contactInfo} onChange={e => setContactInfo(e.target.value)} />
           </div>

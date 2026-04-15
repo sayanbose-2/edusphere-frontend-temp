@@ -97,7 +97,7 @@ export default function FacultyResearch() {
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn icon-btn-success" onClick={() => { setSelected(item); setAddId(''); setModal('addFaculty'); }} title="Add co-investigator"><BsPersonPlus size={13} /></button>
             <button className="icon-btn" onClick={() => { setSelected(item); setAddId(''); setModal('addStudent'); }} title="Add student"><BsMortarboard size={13} /></button>
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
@@ -108,11 +108,11 @@ export default function FacultyResearch() {
       <Modal show={modal === 'create'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>Create Research Project</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Title</label>
             <input className="form-control" value={title} onChange={e => setTitle(e.target.value)} placeholder="Project title" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div className="grid grid-cols-2 gap-3.5 mb-3.5">
             <div>
               <label className="form-label">Start Date</label>
               <input type="date" className="form-control" value={startDate} onChange={e => setStartDate(e.target.value)} />
@@ -140,7 +140,7 @@ export default function FacultyResearch() {
       <Modal show={modal === 'addFaculty'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>Add Co-Investigator</Modal.Title></Modal.Header>
         <Modal.Body>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 14 }}>Project: <strong>{selected?.title}</strong></p>
+          <p className="text-sm text-secondary mb-3.5">Project: <strong>{selected?.title}</strong></p>
           <label className="form-label">Select Faculty</label>
           <select className="form-select" value={addId} onChange={e => setAddId(e.target.value)}>
             <option value="">Select faculty member</option>
@@ -156,7 +156,7 @@ export default function FacultyResearch() {
       <Modal show={modal === 'addStudent'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>Add Student Participant</Modal.Title></Modal.Header>
         <Modal.Body>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 14 }}>Project: <strong>{selected?.title}</strong></p>
+          <p className="text-sm text-secondary mb-3.5">Project: <strong>{selected?.title}</strong></p>
           <label className="form-label">Select Student</label>
           <select className="form-select" value={addId} onChange={e => setAddId(e.target.value)}>
             <option value="">Select student</option>
@@ -170,10 +170,10 @@ export default function FacultyResearch() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete "{selected?.title}"?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete "{selected?.title}"?</p>
+          <p className="text-sm text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

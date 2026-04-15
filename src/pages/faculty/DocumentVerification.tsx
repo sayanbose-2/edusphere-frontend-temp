@@ -40,7 +40,7 @@ export default function DocumentVerification() {
   const columns: Column<StudentDocument>[] = [
     { key: 'studentId',          label: 'Student',     render: item => students.find(s => s.id === item.studentId)?.name ?? '—' },
     { key: 'docType',            label: 'Type',        render: item => formatEnum(item.docType) },
-    { key: 'downloadUrl',        label: 'Document',    render: item => item.downloadUrl ? <a href={item.downloadUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--blue)', fontSize: 13 }}>Download</a> : '—' },
+    { key: 'downloadUrl',        label: 'Document',    render: item => item.downloadUrl ? <a href={item.downloadUrl} target="_blank" rel="noreferrer" className="text-blue text-sm">Download</a> : '—' },
     { key: 'verificationStatus', label: 'Status',      render: item => <StatusBadge status={item.verificationStatus ? 'VERIFIED' : 'UNVERIFIED'} /> },
   ];
 

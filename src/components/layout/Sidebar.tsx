@@ -5,9 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getMenuForRole } from '@/utils/sidebarMenu';
 import { formatEnum } from '@/utils/formatters';
 
-interface Props { collapsed: boolean; width: number; }
+interface Props { collapsed: boolean; }
 
-export function Sidebar({ collapsed, width }: Props) {
+export function Sidebar({ collapsed }: Props) {
   const { user, logout } = useAuth();
   const menu = user ? getMenuForRole(user.roles) : [];
 
@@ -38,9 +38,8 @@ export function Sidebar({ collapsed, width }: Props) {
         to={item.path}
         title={collapsed ? item.label : undefined}
         className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
-        style={collapsed ? { justifyContent: 'center', margin: '1px 5px', width: 'calc(100% - 10px)', padding: '8px 0' } : undefined}
       >
-        <span style={{ flexShrink: 0 }}>{icon(item.icon)}</span>
+        <span className="flex-shrink-0">{icon(item.icon)}</span>
         {!collapsed && <span>{item.label}</span>}
       </NavLink>
     );
@@ -48,11 +47,10 @@ export function Sidebar({ collapsed, width }: Props) {
 
   return (
     <aside
-      className="sidebar"
-      style={{ width, transition: 'width 0.2s ease' }}
+      className={`sidebar transition-[width] duration-200 ease-in-out ${collapsed ? 'w-14' : 'w-[252px]'}`}
     >
       {/* Header */}
-      <div className="sidebar-header" style={{ justifyContent: collapsed ? 'center' : undefined }}>
+      <div className={`sidebar-header ${collapsed ? 'justify-center' : ''}`}>
         <div className="sidebar-logo">
           <BsMortarboardFill size={17} color="#fff" />
         </div>
@@ -67,11 +65,11 @@ export function Sidebar({ collapsed, width }: Props) {
         {!collapsed && user && (
           <div className="sidebar-user">
             <div className="sidebar-avatar">{initials}</div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#CDD9E5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis">
                 {user.name}
               </div>
-              <div style={{ fontSize: 10, color: '#3D444D', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div className="text-xs text-gray-600 mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                 {roleLabel}
               </div>
             </div>
@@ -79,10 +77,9 @@ export function Sidebar({ collapsed, width }: Props) {
         )}
         <button
           onClick={logout}
-          className="sidebar-link"
-          style={{ justifyContent: collapsed ? 'center' : undefined }}
+          className={`sidebar-link ${collapsed ? 'justify-center' : ''}`}
         >
-          <BsBoxArrowRight size={14} style={{ flexShrink: 0 }} />
+          <BsBoxArrowRight size={14} className="flex-shrink-0" />
           {!collapsed && <span>Sign out</span>}
         </button>
       </div>

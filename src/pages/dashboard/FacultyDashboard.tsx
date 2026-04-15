@@ -36,9 +36,9 @@ export default function FacultyDashboard() {
   }, []);
 
   const statCards = [
-    { label: 'Exams',    value: counts.exams,     icon: <BsClipboardCheck size={18} />, color: '#2563EB', bg: 'rgba(37,99,235,0.08)',  path: '/faculty/exams',    sub: 'Active exams' },
-    { label: 'Research', value: counts.research,  icon: <BsSearch size={18} />,          color: '#16A34A', bg: 'rgba(22,163,74,0.08)',   path: '/faculty/research', sub: 'Research projects' },
-    { label: 'Workload', value: counts.workloads, icon: <BsBriefcase size={18} />,        color: '#D97706', bg: 'rgba(217,119,6,0.08)',   path: '/faculty/workload', sub: 'Assigned workloads' },
+    { label: 'Exams',    value: counts.exams,     icon: <BsClipboardCheck size={18} />, tw: 'bg-blue-dim text-blue',       path: '/faculty/exams',    sub: 'Active exams' },
+    { label: 'Research', value: counts.research,  icon: <BsSearch size={18} />,           tw: 'bg-success/10 text-success',  path: '/faculty/research', sub: 'Research projects' },
+    { label: 'Workload', value: counts.workloads, icon: <BsBriefcase size={18} />,         tw: 'bg-warning/10 text-warning',  path: '/faculty/workload', sub: 'Assigned workloads' },
   ];
 
   const quickLinks = [
@@ -48,33 +48,33 @@ export default function FacultyDashboard() {
   ];
 
   if (loading) {
-    return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}><Spinner animation="border" /></div>;
+    return <div className="flex justify-center pt-20"><Spinner animation="border" /></div>;
   }
 
   return (
     <>
-      <div className="welcome-banner" style={{ background: 'linear-gradient(135deg, #1E1B4B 0%, #3730A3 60%, #4F46E5 100%)', color: '#fff' }}>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ margin: '0 0 5px', fontSize: 11, opacity: 0.55, letterSpacing: 0.5, textTransform: 'uppercase' }}>{dateStr()}</p>
-          <h2 style={{ margin: '0 0 5px', fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>
+      <div className="welcome-banner welcome-banner--faculty">
+        <div className="relative z-10">
+          <p className="m-0 text-xs opacity-55 tracking-wide uppercase">{dateStr()}</p>
+          <h2 className="m-0 text-3xl font-black tracking-tight -ml-0.5">
             {greet()}, {user?.name?.split(' ')[0]}
           </h2>
-          <p style={{ margin: 0, fontSize: 13, opacity: 0.6 }}>Faculty Portal · Academic Year 2025–26</p>
+          <p className="m-0 text-base opacity-60">Faculty Portal · Academic Year 2025–26</p>
         </div>
-        <BsPersonBadge size={56} style={{ opacity: 0.08 }} />
+        <BsPersonBadge size={56} className="opacity-8" />
       </div>
 
       <Row className="g-3 mb-4">
         {statCards.map(c => (
           <Col key={c.label} xs={12} md={4}>
             <div className="feature-card" onClick={() => navigate(c.path)}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 9, background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.color }}>{c.icon}</div>
-                <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.8px', lineHeight: 1 }}>{c.value}</span>
+              <div className="flex justify-between items-start mb-3.5">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${c.tw}`}>{c.icon}</div>
+                <span className="text-7xl font-black text-base tracking-tight leading-none">{c.value}</span>
               </div>
-              <h6 style={{ margin: '0 0 3px', fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{c.label}</h6>
-              <p style={{ margin: '0 0 14px', fontSize: 12, color: 'var(--text-2)' }}>{c.sub}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: c.color, fontWeight: 600 }}>
+              <h6 className="m-0 font-bold text-base text-base mb-0.5">{c.label}</h6>
+              <p className="m-0 text-sm text-secondary mb-3.5">{c.sub}</p>
+              <div className={`flex items-center gap-1.25 text-sm font-semibold ${c.tw.split(' ').find(cls => cls.startsWith('text-'))}`}>
                 View <BsArrowRight size={11} />
               </div>
             </div>
@@ -83,23 +83,21 @@ export default function FacultyDashboard() {
       </Row>
 
       {/* Quick links */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
-        <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)', background: 'var(--subtle)' }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Quick Access</span>
+      <div className="bg-surface border border-border rounded-lg overflow-hidden shadow-var-sm">
+        <div className="py-3 px-4.5 border-b border-border bg-subtle">
+          <span className="text-base font-semibold text-base">Quick Access</span>
         </div>
         {quickLinks.map((link, i) => (
           <div
             key={link.label}
             onClick={() => navigate(link.path)}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 18px', borderBottom: i < quickLinks.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg)')}
-            onMouseLeave={e => (e.currentTarget.style.background = '')}
+            className={`flex items-center justify-between py-3.25 px-4.5 border-b cursor-pointer transition-colors hover:bg-base ${i === quickLinks.length - 1 ? 'border-b-0' : 'border-border'}`}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
-              <span style={{ color: 'var(--text-2)' }}>{link.icon}</span>
+            <div className="flex items-center gap-2.5 text-base font-medium text-base">
+              <span className="text-secondary">{link.icon}</span>
               {link.label}
             </div>
-            <BsArrowRight size={12} style={{ color: 'var(--text-3)' }} />
+            <BsArrowRight size={12} className="text-tertiary" />
           </div>
         ))}
       </div>

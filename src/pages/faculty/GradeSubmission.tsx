@@ -144,7 +144,7 @@ export default function GradeSubmission() {
     { key: 'examId',    label: 'Exam',    render: item => examLabel(item.examId) },
     { key: 'studentId', label: 'Student', render: item => students.find(s => s.id === item.studentId)?.name ?? '—' },
     { key: 'score',     label: 'Score',   render: item => `${item.score}/100` },
-    { key: 'grade',     label: 'Grade',   render: item => <strong style={{ fontSize: 15 }}>{item.grade}</strong> },
+    { key: 'grade',     label: 'Grade',   render: item => <strong className="text-lg">{item.grade}</strong> },
     { key: 'status',    label: 'Status',  render: item => <StatusBadge status={item.status} /> },
   ];
 
@@ -159,14 +159,14 @@ export default function GradeSubmission() {
       />
 
       {completedExams.length === 0 && !loading && (
-        <div style={{ padding: '20px 0', color: 'var(--text-2)', fontSize: 14 }}>
+        <div className="py-5 text-secondary text-base">
           No completed exams yet. Mark an exam as completed from the Exams page before submitting grades.
         </div>
       )}
 
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} disabled={!item.id} title="Edit"><BsPencil size={13} /></button>
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} disabled={!item.id} title="Delete"><BsTrash size={13} /></button>
           </div>
@@ -176,8 +176,8 @@ export default function GradeSubmission() {
       <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Grade' : 'Submit Grade'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
-            <label className="form-label">Exam <span style={{ fontSize: 11, color: 'var(--text-3)' }}>(completed exams only)</span></label>
+          <div className="mb-3.5">
+            <label className="form-label">Exam <span className="text-xs text-tertiary">(completed exams only)</span></label>
             <select className="form-select" value={examId} onChange={e => setExamId(e.target.value)}>
               <option value="">Select completed exam</option>
               {completedExams.map(ex => (
@@ -187,16 +187,16 @@ export default function GradeSubmission() {
               ))}
             </select>
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Student</label>
             <select className="form-select" value={studentId} onChange={e => setStudentId(e.target.value)}>
               <option value="">Select student</option>
               {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+          <div className="grid grid-cols-3 gap-3.5">
             <div>
-              <label className="form-label">Score <span style={{ fontSize: 11, color: 'var(--text-3)' }}>(0–100)</span></label>
+              <label className="form-label">Score <span className="text-xs text-tertiary">(0–100)</span></label>
               <input
                 type="number"
                 className="form-control"
@@ -220,7 +220,7 @@ export default function GradeSubmission() {
               </select>
             </div>
           </div>
-          <small style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6, display: 'block' }}>
+          <small className="text-xs text-tertiary mt-1.5 block">
             Grade and status are auto-calculated from score (A≥90, B≥80, C≥70, D≥60, F&lt;60).
           </small>
         </Modal.Body>
@@ -233,10 +233,10 @@ export default function GradeSubmission() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete this grade?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete this grade?</p>
+          <p className="text-base text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>

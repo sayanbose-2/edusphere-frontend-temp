@@ -141,7 +141,7 @@ export default function DeptGrades() {
     { key: 'examId',    label: 'Exam',    render: item => examLabel(item.examId) },
     { key: 'studentId', label: 'Student', render: item => studentName(item.studentId) },
     { key: 'score',     label: 'Score',   render: item => `${item.score}/100` },
-    { key: 'grade',     label: 'Grade',   render: item => <strong style={{ fontSize: 15 }}>{item.grade}</strong> },
+    { key: 'grade',     label: 'Grade',   render: item => <strong className="text-base">{item.grade}</strong> },
     { key: 'status',    label: 'Status',  render: item => <StatusBadge status={item.status} /> },
   ];
 
@@ -158,15 +158,15 @@ export default function DeptGrades() {
       />
 
       {completedExams.length === 0 && !loading && (
-        <div style={{ padding: '20px 0', color: 'var(--text-2)', fontSize: 14 }}>
+        <div className="py-5 text-secondary text-sm">
           No completed exams yet. Mark an exam as completed before submitting grades.
         </div>
       )}
 
       {allExams.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-          <label className="form-label" style={{ marginBottom: 0, whiteSpace: 'nowrap' }}>Filter by Exam</label>
-          <select className="form-select form-select-sm" style={{ maxWidth: 280 }} value={filterExamId}
+        <div className="flex items-center gap-2 mb-4">
+          <label className="form-label m-0 whitespace-nowrap">Filter by Exam</label>
+          <select className="form-select form-select-sm max-w-xs" value={filterExamId}
             onChange={e => filterByExam(e.target.value)}>
             <option value="">All completed exams</option>
             {allExams.map(e => <option key={e.id} value={e.id}>{courseName(e.courseId)} — {formatEnum(e.type)}</option>)}
@@ -176,7 +176,7 @@ export default function DeptGrades() {
 
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} disabled={!item.id} title="Edit"><BsPencil size={13} /></button>
           </div>
         )}
@@ -185,8 +185,8 @@ export default function DeptGrades() {
       <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Grade' : 'Submit Grade'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
-            <label className="form-label">Exam <span style={{ fontSize: 11, color: 'var(--text-3)' }}>(completed exams only)</span></label>
+          <div className="mb-3.5">
+            <label className="form-label">Exam <span className="text-xs text-tertiary">(completed exams only)</span></label>
             <select className="form-select" value={examId} onChange={e => setExamId(e.target.value)}>
               <option value="">Select completed exam</option>
               {completedExams.map(ex => (
@@ -196,14 +196,14 @@ export default function DeptGrades() {
               ))}
             </select>
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Student</label>
             <select className="form-select" value={studentId} onChange={e => setStudentId(e.target.value)}>
               <option value="">Select student</option>
               {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+          <div className="grid grid-cols-3 gap-3.5">
             <div>
               <label className="form-label">Score (0–100)</label>
               <input type="number" className="form-control" value={score} onChange={e => onScoreChange(Number(e.target.value))} min={0} max={100} />
@@ -222,7 +222,7 @@ export default function DeptGrades() {
               </select>
             </div>
           </div>
-          <small style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6, display: 'block' }}>
+          <small className="text-xs text-tertiary mt-1.5 block">
             Grade and status are auto-calculated from score. You can override manually.
           </small>
         </Modal.Body>

@@ -27,21 +27,21 @@ export default function ChangePasswordPage() {
   return (
     <>
       <PageHeader title="Change Password" subtitle="Update your account password" />
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '28px 32px', maxWidth: 480, boxShadow: 'var(--shadow)' }}>
+      <div className="bg-surface border border-border rounded-lg p-7 max-w-md shadow-var-sm">
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 16 }}>
+          <div className="mb-4">
             <label className="form-label">Current Password</label>
             <input type="password" className="form-control" value={form.currentPassword} onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))} required />
           </div>
-          <div style={{ marginBottom: 16 }}>
+          <div className="mb-4">
             <label className="form-label">New Password</label>
             <input type="password" minLength={8} className="form-control" value={form.newPassword} onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))} placeholder="Min. 8 characters" required />
           </div>
-          <div style={{ marginBottom: 24 }}>
+          <div className="mb-6">
             <label className="form-label">Confirm New Password</label>
             <input type="password" className="form-control" value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} required />
           </div>
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{ fontWeight: 600, padding: '9px 20px' }}>
+          <button type="submit" className="btn btn-primary font-semibold py-2 px-5" disabled={loading}>
             {loading && <span className="spinner-border spinner-border-sm me-2" />}
             {loading ? 'Updating…' : 'Update Password'}
           </button>

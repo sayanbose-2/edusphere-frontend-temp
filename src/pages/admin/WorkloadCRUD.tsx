@@ -83,7 +83,7 @@ export default function WorkloadCRUD() {
       />
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="flex gap-1.5">
             <button className="icon-btn" onClick={() => openEdit(item)} disabled={!item.id} title="Edit"><BsPencil size={13} /></button>
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} disabled={!item.id} title="Delete"><BsTrash size={13} /></button>
           </div>
@@ -93,21 +93,21 @@ export default function WorkloadCRUD() {
       <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)}>
         <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Workload' : 'Assign Workload'}</Modal.Title></Modal.Header>
         <Modal.Body>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Faculty</label>
             <select className="form-select" value={facultyId} onChange={e => setFacultyId(e.target.value)}>
               <option value="">Select faculty member</option>
               {faculties.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <label className="form-label">Course</label>
             <select className="form-select" value={courseId} onChange={e => setCourseId(e.target.value)}>
               <option value="">Select course</option>
               {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+          <div className="grid grid-cols-3 gap-3.5">
             <div>
               <label className="form-label">Hours / Week</label>
               <input type="number" className="form-control" value={hours} onChange={e => setHours(Number(e.target.value))} min={0} />
@@ -134,10 +134,10 @@ export default function WorkloadCRUD() {
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">
-        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Delete this workload?</p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 24 }}>This cannot be undone.</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <Modal.Body className="p-7 text-center">
+          <p className="font-semibold mb-1.5">Delete this workload?</p>
+          <p className="text-sm text-secondary mb-6">This cannot be undone.</p>
+          <div className="flex gap-2 justify-center">
             <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={saving}>Delete</button>
           </div>
