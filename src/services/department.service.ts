@@ -1,9 +1,9 @@
 import apiClient from '@/api/client';
-import type { Department, CreateDepartmentRequest } from '@/types/academic.types';
+import type { Department, CreateDepartmentRequest, PageResponse } from '@/types/academic.types';
 
 export const departmentService = {
   getAll: () =>
-    apiClient.get<Department[]>('/departments').then((r) => r.data),
+    apiClient.get<PageResponse<Department>>('/departments').then((r) => r.data.content ?? []),
 
   getById: (id: string) =>
     apiClient.get<Department>(`/departments/${id}`).then((r) => r.data),

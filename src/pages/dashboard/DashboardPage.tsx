@@ -5,6 +5,7 @@ import FacultyDashboard from '@/pages/dashboard/FacultyDashboard';
 import StudentDashboard from '@/pages/dashboard/StudentDashboard';
 import DeptHeadDashboard from '@/pages/dashboard/DeptHeadDashboard';
 import ComplianceDashboard from '@/pages/dashboard/ComplianceDashboard';
+import RegulatorDashboard from '@/pages/dashboard/RegulatorDashboard';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -15,6 +16,7 @@ export default function DashboardPage() {
   if (user.roles.includes(Role.DEPARTMENT_HEAD)) return <DeptHeadDashboard />;
   if (user.roles.includes(Role.FACULTY)) return <FacultyDashboard />;
   if (user.roles.includes(Role.COMPLIANCE_OFFICER)) return <ComplianceDashboard />;
+  if (user.roles.includes(Role.REGULATOR)) return <RegulatorDashboard />;
   if (user.roles.includes(Role.STUDENT)) return <StudentDashboard />;
 
   return (

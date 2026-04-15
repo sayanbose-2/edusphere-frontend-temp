@@ -4,11 +4,12 @@ import type {
   SendNotificationRequest,
   BroadcastNotificationRequest,
 } from '@/types/compliance.types';
+import type { PageResponse } from '@/types/academic.types';
 import { NotificationType } from '@/types/enums';
 
 export const notificationService = {
   getByUser: (userId: string) =>
-    apiClient.get<Notification[]>(`/notifications/${userId}`).then((r) => r.data),
+    apiClient.get<PageResponse<Notification>>(`/notifications/${userId}`).then((r) => r.data.content ?? []),
 
   markAsRead: (notificationId: string) =>
     apiClient.patch(`/notifications/${notificationId}/read`),

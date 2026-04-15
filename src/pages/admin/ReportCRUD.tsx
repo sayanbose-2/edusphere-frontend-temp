@@ -33,7 +33,7 @@ export default function ReportCRUD() {
   const [saving, setSaving] = useState(false);
 
   const [departmentId, setDepartmentId] = useState('');
-  const [scope, setScope] = useState('');
+  const [scope, setScope] = useState<string>(ReportScope.DEPARTMENT);
   const [metricRows, setMetricRows] = useState<MetricRow[]>([{ key: '', value: '' }]);
   const [status, setStatus] = useState<Status>(Status.ACTIVE);
 
@@ -42,16 +42,22 @@ export default function ReportCRUD() {
       setLoading(true);
       const [r, d] = await Promise.all([reportService.getAll(), departmentService.getAll()]);
       setItems(r); setDepartments(d);
-    } catch { toast.error('Failed to load reports'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load reports');
+    }
     finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, []);
 
-  const openCreate = () => { setSelected(null); setDepartmentId(''); setScope(''); setMetricRows([{ key: '', value: '' }]); setStatus(Status.ACTIVE); setModal('create'); };
+  const openCreate = () => { setSelected(null); setDepartmentId(''); setScope(ReportScope.DEPARTMENT); setMetricRows([{ key: '', value: '' }]); setStatus(Status.ACTIVE); setModal('create'); };
   const openEdit = (item: Report) => { setSelected(item); setDepartmentId(String(item.department || '')); setScope(item.scope); setMetricRows(parseMetrics(item.metrics)); setStatus(item.status); setModal('edit'); };
 
   const handleSave = async () => {
+    if (!scope) { toast.error('Select a scope'); return; }
+    if (!departmentId) { toast.error('Select a department'); return; }
+    if (metricRows.filter(r => r.key.trim()).length === 0) { toast.error('Add at least one metric'); return; }
     setSaving(true);
     try {
       const payload: CreateReportRequest = { generatedBy: user?.id || '', departmentId, scope: scope as ReportScope, metrics: serializeMetrics(metricRows), status };
@@ -117,7 +123,6 @@ export default function ReportCRUD() {
             <div>
               <label className="form-label">Scope</label>
               <select className="form-select" value={scope} onChange={e => setScope(e.target.value)}>
-                <option value="">Select scope</option>
                 {Object.values(ReportScope).map(s => <option key={s} value={s}>{formatEnum(s)}</option>)}
               </select>
             </div>

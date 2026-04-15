@@ -28,20 +28,23 @@ export default function ThesisCRUD() {
   const [title, setTitle] = useState('');
   const [submissionDate, setSubmissionDate] = useState('');
   const [supervisorId, setSupervisorId] = useState('');
-  const [status, setStatus] = useState<ThesisStatus>(ThesisStatus.IN_PROGRESS);
+  const [status, setStatus] = useState<ThesisStatus>(ThesisStatus.SUBMITTED);
 
   const load = async () => {
     try {
       setLoading(true);
       const [t, s, f] = await Promise.all([thesisService.getAll(), studentService.getAll(), facultyService.getAll()]);
       setItems(t); setStudents(s); setFaculties(f);
-    } catch { toast.error('Failed to load theses'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load theses');
+    }
     finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, []);
 
-  const openCreate = () => { setSelected(null); setStudentId(''); setTitle(''); setSubmissionDate(''); setSupervisorId(''); setStatus(ThesisStatus.IN_PROGRESS); setModal('create'); };
+  const openCreate = () => { setSelected(null); setStudentId(''); setTitle(''); setSubmissionDate(''); setSupervisorId(''); setStatus(ThesisStatus.SUBMITTED); setModal('create'); };
   const openEdit = (item: Thesis) => { setSelected(item); setStudentId(item.studentId); setTitle(item.title); setSubmissionDate(item.submissionDate); setSupervisorId(item.supervisorId); setStatus(item.status); setModal('edit'); };
 
   const handleSave = async () => {

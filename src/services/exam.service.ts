@@ -1,12 +1,19 @@
 import apiClient from '@/api/client';
-import type { Exam, CreateExamRequest } from '@/types/academic.types';
+import type { Exam, CreateExamRequest, PageResponse } from '@/types/academic.types';
+import type { Status } from '@/types/enums';
 
 export const examService = {
   getAll: () =>
-    apiClient.get<Exam[]>('/exams').then((r) => r.data),
+    apiClient.get<PageResponse<Exam>>('/exams').then((r) => r.data.content ?? []),
+
+  getByStatus: (status: Status) =>
+    apiClient.get<PageResponse<Exam>>(`/exams/status/${status}`).then((r) => r.data.content ?? []),
 
   getById: (id: string) =>
     apiClient.get<Exam>(`/exams/${id}`).then((r) => r.data),
+
+  getByCourse: (courseId: string) =>
+    apiClient.get<PageResponse<Exam>>(`/exams/course/${courseId}`).then((r) => r.data.content ?? []),
 
   create: (data: CreateExamRequest) =>
     apiClient.post<Exam>('/exams', data).then((r) => r.data),

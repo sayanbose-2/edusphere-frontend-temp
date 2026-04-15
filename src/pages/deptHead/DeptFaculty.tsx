@@ -23,7 +23,10 @@ export default function DeptFaculty() {
         setMyDept(found);
         const data = found ? await facultyService.getByDepartment(found.id) : await facultyService.getAll();
         setFaculty(data);
-      } catch { toast.error('Failed to load faculty data'); }
+      } catch (err: unknown) {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status !== 404 && status !== 500) toast.error('Failed to load faculty data');
+      }
       finally { setLoading(false); }
     };
     load();

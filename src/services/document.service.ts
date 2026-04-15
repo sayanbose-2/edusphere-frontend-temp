@@ -1,12 +1,12 @@
 import apiClient from '@/api/client';
-import type { StudentDocument } from '@/types/academic.types';
+import type { StudentDocument, PageResponse } from '@/types/academic.types';
 
 export const documentService = {
   getAll: () =>
-    apiClient.get<StudentDocument[]>('/student-documents/all').then((r) => r.data),
+    apiClient.get<PageResponse<StudentDocument>>('/student-documents/all').then((r) => r.data.content ?? []),
 
   getByStudent: (studentId: string) =>
-    apiClient.get<StudentDocument[]>(`/student-documents/student/${studentId}`).then((r) => r.data),
+    apiClient.get<PageResponse<StudentDocument>>(`/student-documents/student/${studentId}`).then((r) => r.data.content ?? []),
 
   toggleVerification: (documentId: string, verified: boolean) =>
     apiClient.patch(`/student-documents/${documentId}/verify`, { verified }),

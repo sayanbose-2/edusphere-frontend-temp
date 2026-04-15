@@ -19,7 +19,10 @@ export default function DocumentList() {
       setLoading(true);
       const [docs, studs] = await Promise.all([documentService.getAll(), studentService.getAll()]);
       setItems(docs); setStudents(studs);
-    } catch { toast.error('Failed to load documents'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load documents');
+    }
     finally { setLoading(false); }
   };
 

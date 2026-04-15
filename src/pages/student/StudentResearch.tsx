@@ -14,10 +14,19 @@ export default function StudentResearch() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([researchService.getAll(), facultyService.getAll()])
-      .then(([rp, fac]) => { setProjects(rp); setFaculties(fac); })
-      .catch(() => toast.error('Failed to load research projects'))
-      .finally(() => setLoading(false));
+    const loadData = async () => {
+      try {
+        const rp = await researchService.getAll();
+        setProjects(rp);
+      } catch (err: unknown) {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status !== 403 && status !== 404 && status !== 500) toast.error('Failed to load research projects');
+      }
+      // Faculty list is used only for names — student may not have access
+      try { const fac = await facultyService.getAll(); setFaculties(fac); } catch { /* student role may lack permission */ }
+      setLoading(false);
+    };
+    loadData();
   }, []);
 
   const columns: Column<ResearchProject>[] = [

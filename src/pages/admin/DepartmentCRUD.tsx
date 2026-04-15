@@ -4,10 +4,11 @@ import { BsPencil, BsTrash, BsPlus, BsPersonCheck } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { departmentService } from '@/services/department.service';
 import { facultyService } from '@/services/faculty.service';
+import { userService } from '@/services/user.service';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { DataTable } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { Status } from '@/types/enums';
+import { Role, Status } from '@/types/enums';
 import type { Column } from '@/components/ui/DataTable';
 import type { Department, CreateDepartmentRequest, Faculty } from '@/types/academic.types';
 
@@ -32,7 +33,10 @@ export default function DepartmentCRUD() {
       setLoading(true);
       const [d, f] = await Promise.all([departmentService.getAll(), facultyService.getAll()]);
       setItems(d); setFaculties(f);
-    } catch { toast.error('Failed to load departments'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load departments');
+    }
     finally { setLoading(false); }
   };
 
@@ -55,8 +59,28 @@ export default function DepartmentCRUD() {
   const handleAssignHead = async () => {
     if (!selected || !headId) { toast.error('Select a faculty member'); return; }
     setSaving(true);
-    try { await departmentService.assignHead(selected.id, headId); toast.success('Department head assigned'); setModal(null); load(); }
-    catch { toast.error('Failed to assign head'); }
+    try {
+      // Step 1: Set headId on the department in faculty-service
+      await departmentService.assignHead(selected.id, headId);
+
+      // Step 2: Grant DEPARTMENT_HEAD role to the new head in IAM
+      const newHead = faculties.find(f => f.id === headId);
+      if (newHead) {
+        await userService.updateRoles(newHead.userId, [Role.FACULTY, Role.DEPARTMENT_HEAD], true);
+      }
+
+      // Step 3: Remove DEPARTMENT_HEAD role from the previous head (if any and different)
+      if (selected.headId && selected.headId !== headId) {
+        const prevHead = faculties.find(f => f.id === selected.headId);
+        if (prevHead) {
+          await userService.updateRoles(prevHead.userId, [Role.FACULTY], true);
+        }
+      }
+
+      toast.success('Department head assigned');
+      setModal(null);
+      load();
+    } catch { toast.error('Failed to assign head'); }
     finally { setSaving(false); }
   };
 
@@ -72,7 +96,10 @@ export default function DepartmentCRUD() {
     { key: 'departmentName', label: 'Name' },
     { key: 'departmentCode', label: 'Code' },
     { key: 'contactInfo',    label: 'Contact' },
-    { key: 'headName',       label: 'Head', render: item => item.headName ?? '—' },
+    { key: 'headName',       label: 'Head', render: item => {
+      const name = item.headName ?? faculties.find(f => f.id === item.headId)?.name;
+      return name ?? '—';
+    }},
     { key: 'status',         label: 'Status', render: item => <StatusBadge status={item.status} /> },
   ];
 
@@ -129,8 +156,13 @@ export default function DepartmentCRUD() {
           <label className="form-label">Select Faculty</label>
           <select className="form-select" value={headId} onChange={e => setHeadId(e.target.value)}>
             <option value="">Select faculty member</option>
-            {faculties.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            {faculties.filter(f => f.departmentId === selected?.id).map(f => (
+              <option key={f.id} value={f.id}>{f.name}{f.id === selected?.headId ? ' (current head)' : ''}</option>
+            ))}
           </select>
+          {faculties.filter(f => f.departmentId === selected?.id).length === 0 && (
+            <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 8 }}>No faculty members in this department yet. Add faculty first.</p>
+          )}
         </Modal.Body>
         <Modal.Footer>
           <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>

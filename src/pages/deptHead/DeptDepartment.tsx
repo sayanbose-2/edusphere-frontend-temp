@@ -32,7 +32,10 @@ export default function DeptDepartment() {
       const [allDepts, facData] = await Promise.all([departmentService.getAll(), facultyService.getAll()]);
       setFaculties(facData);
       setMyDept(allDepts.find(d => d.headId === user?.id) || null);
-    } catch { toast.error('Failed to load department data'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load department data');
+    }
     finally { setLoading(false); }
   };
 

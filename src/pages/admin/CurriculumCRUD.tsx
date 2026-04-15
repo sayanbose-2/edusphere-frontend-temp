@@ -47,7 +47,10 @@ export default function CurriculumCRUD() {
       setLoading(true);
       const [cur, crs] = await Promise.all([curriculumService.getAll(), courseService.getAll()]);
       setItems(cur); setCourses(crs);
-    } catch { toast.error('Failed to load curricula'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load curricula');
+    }
     finally { setLoading(false); }
   };
 

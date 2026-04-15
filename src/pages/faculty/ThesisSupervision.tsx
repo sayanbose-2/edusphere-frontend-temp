@@ -19,14 +19,17 @@ export default function ThesisSupervision() {
   const [modal, setModal] = useState(false);
   const [selected, setSelected] = useState<Thesis | null>(null);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<ThesisStatus>('IN_PROGRESS' as ThesisStatus);
+  const [status, setStatus] = useState<ThesisStatus>(ThesisStatus.SUBMITTED);
 
   const load = async () => {
     try {
       setLoading(true);
       const [theses, stus] = await Promise.all([thesisService.getMy(), studentService.getAll()]);
       setItems(theses); setStudents(stus);
-    } catch { toast.error('Failed to load theses'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load theses');
+    }
     finally { setLoading(false); }
   };
 

@@ -3,12 +3,11 @@ import { decodeJwt, isTokenExpired } from '@/lib/jwt';
 import { TOKEN_KEYS } from '@/lib/constants';
 import { authService } from '@/services/auth.service';
 import { Role } from '@/types/enums';
-import type { AuthUser, LoginRequest, RegisterRequest } from '@/types/auth.types';
+import type { AuthUser, LoginRequest } from '@/types/auth.types';
 
 interface AuthContextValue {
   user: AuthUser | null;
-  login: (data: LoginRequest) => Promise<void>;
-  register: (data: RegisterRequest) => Promise<void>;
+  login: (data: LoginRequest) => Promise<Role[]>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   hasRole: (...roles: Role[]) => boolean;
@@ -43,16 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = async (data: LoginRequest) => {
+  const login = async (data: LoginRequest): Promise<Role[]> => {
     const { accessToken, refreshToken } = await authService.login(data);
     localStorage.setItem(TOKEN_KEYS.ACCESS, accessToken);
     localStorage.setItem(TOKEN_KEYS.REFRESH, refreshToken);
     const decoded = decodeJwt(accessToken);
-    setUser({ id: decoded.userId, name: decoded.name, roles: decoded.roles as Role[] });
-  };
-
-  const register = async (data: RegisterRequest) => {
-    await authService.register(data);
+    const roles = decoded.roles as Role[];
+    setUser({ id: decoded.userId, name: decoded.name, roles });
+    return roles;
   };
 
   const logout = async () => {
@@ -73,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, register, logout, isAuthenticated: !!user, hasRole, loading }}
+      value={{ user, login, logout, isAuthenticated: !!user, hasRole, loading }}
     >
       {children}
     </AuthContext.Provider>

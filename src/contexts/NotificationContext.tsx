@@ -29,22 +29,23 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user, isAuthenticated } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const knownIds = useRef<Set<string>>(new Set());
+  const initialized = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
 
   // Central dedup + state update used by both SSE and polling
   const mergeNotifications = useCallback((incoming: Notification[]) => {
-    const newOnes = incoming.filter((n) => !knownIds.current.has(n.notificationId));
+    const newOnes = incoming.filter((n) => !knownIds.current.has(n.id));
     if (newOnes.length === 0) return;
 
-    // Only toast if we already had some known notifications (not the very first load)
-    if (knownIds.current.size > 0) {
+    // Only toast for notifications that arrive after initial load
+    if (initialized.current) {
       newOnes.forEach((n) => toast.info(n.message, { autoClose: 5000 }));
     }
 
-    newOnes.forEach((n) => knownIds.current.add(n.notificationId));
+    newOnes.forEach((n) => knownIds.current.add(n.id));
     setNotifications((prev) => {
-      const existingIds = new Set(prev.map((n) => n.notificationId));
-      const toAdd = newOnes.filter((n) => !existingIds.has(n.notificationId));
+      const existingIds = new Set(prev.map((n) => n.id));
+      const toAdd = newOnes.filter((n) => !existingIds.has(n.id));
       return toAdd.length > 0 ? [...toAdd, ...prev] : prev;
     });
   }, []);
@@ -56,7 +57,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       mergeNotifications(incoming);
       // Also sync full list to keep state in order with server
       setNotifications(incoming);
-      knownIds.current = new Set(incoming.map((n) => n.notificationId));
+      knownIds.current = new Set(incoming.map((n) => n.id));
     } catch (err: unknown) {
       const status =
         err &&
@@ -67,6 +68,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         setNotifications([]);
         knownIds.current = new Set();
       }
+    } finally {
+      initialized.current = true;
     }
   }, [user, mergeNotifications]);
 
@@ -101,9 +104,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             if (!raw || raw === 'ping') continue;
             try {
               const n: Notification = JSON.parse(raw);
-              if (knownIds.current.has(n.notificationId)) continue;
-              knownIds.current.add(n.notificationId);
-              if (knownIds.current.size > 1) {
+              if (knownIds.current.has(n.id)) continue;
+              knownIds.current.add(n.id);
+              if (initialized.current) {
                 toast.info(n.message, { autoClose: 5000 });
               }
               setNotifications((prev) => [n, ...prev]);
@@ -122,6 +125,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     if (!isAuthenticated || !user) return;
 
     knownIds.current = new Set();
+    initialized.current = false;
 
     // Initial load (no toasts — establishes baseline)
     fetchNotifications();
@@ -136,14 +140,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       if (!user) return;
       try {
         const incoming = await notificationService.getByUser(user.id);
-        const newOnes = incoming.filter((n) => !knownIds.current.has(n.notificationId));
+        const newOnes = incoming.filter((n) => !knownIds.current.has(n.id));
         if (newOnes.length > 0) {
           newOnes.forEach((n) => {
             toast.info(n.message, { autoClose: 5000 });
-            knownIds.current.add(n.notificationId);
+            knownIds.current.add(n.id);
           });
           setNotifications(incoming);
-          knownIds.current = new Set(incoming.map((n) => n.notificationId));
+          knownIds.current = new Set(incoming.map((n) => n.id));
         }
       } catch {
         // ignore poll errors
@@ -163,7 +167,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     try {
       await notificationService.markAsRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n.notificationId === id ? { ...n, isRead: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
     } catch {
       // ignore

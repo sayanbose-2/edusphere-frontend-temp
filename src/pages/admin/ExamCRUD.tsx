@@ -8,11 +8,12 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { DataTable } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { ExamType, Status } from '@/types/enums';
+import { BsCheckCircle } from 'react-icons/bs';
 import { formatEnum } from '@/utils/formatters';
 import type { Column } from '@/components/ui/DataTable';
 import type { Exam, Course, CreateExamRequest } from '@/types/academic.types';
 
-type ModalMode = 'create' | 'edit' | 'delete' | null;
+type ModalMode = 'create' | 'edit' | 'delete' | 'complete' | null;
 
 export default function ExamCRUD() {
   const [items, setItems] = useState<Exam[]>([]);
@@ -30,7 +31,10 @@ export default function ExamCRUD() {
       setLoading(true);
       const [e, c] = await Promise.all([examService.getAll(), courseService.getAll()]);
       setItems(e); setCourses(c);
-    } catch { toast.error('Failed to load exams'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load exams');
+    }
     finally { setLoading(false); }
   };
 
@@ -58,13 +62,36 @@ export default function ExamCRUD() {
     finally { setSaving(false); }
   };
 
+  const handleMarkComplete = async () => {
+    if (!selected) return;
+    setSaving(true);
+    try {
+      await examService.update(selected.id, {
+        courseId: selected.courseId,
+        type: selected.type,
+        date: selected.date,
+        status: Status.COMPLETED,
+      });
+      toast.success('Exam marked as completed. Grades can now be submitted.');
+      setModal(null); load();
+    } catch { toast.error('Failed to mark exam as completed'); }
+    finally { setSaving(false); }
+  };
+
   const courseName = (id: string) => courses.find(c => c.id === id)?.title ?? '—';
+  const today = new Date().toISOString().split('T')[0];
+  const isPastExam = (item: Exam) => new Date(item.date) < new Date();
 
   const columns: Column<Exam>[] = [
-    { key: 'courseId', label: 'Course', render: item => courseName(item.courseId) },
-    { key: 'type',     label: 'Type',   render: item => <StatusBadge status={item.type} /> },
-    { key: 'date',     label: 'Date',   render: item => new Date(item.date).toLocaleDateString() },
-    { key: 'status',   label: 'Status', render: item => <StatusBadge status={item.status} /> },
+    { key: 'courseId', label: 'Exam', render: item => (
+      <span>
+        <span style={{ fontWeight: 500 }}>{courseName(item.courseId)}</span>
+        <span style={{ margin: '0 6px', color: 'var(--text-3)' }}>·</span>
+        <StatusBadge status={item.type} />
+      </span>
+    )},
+    { key: 'date',   label: 'Exam Date', render: item => new Date(item.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) },
+    { key: 'status', label: 'Status', render: item => <StatusBadge status={item.status} /> },
   ];
 
   return (
@@ -75,7 +102,18 @@ export default function ExamCRUD() {
       <DataTable columns={columns} data={items} loading={loading}
         actions={item => (
           <div style={{ display: 'flex', gap: 6 }}>
-            <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
+            {item.status === Status.ACTIVE && isPastExam(item) && (
+              <button
+                className="icon-btn icon-btn-success"
+                onClick={() => { setSelected(item); setModal('complete'); }}
+                title="Mark as Completed"
+              >
+                <BsCheckCircle size={14} />
+              </button>
+            )}
+            {item.status !== Status.COMPLETED && (
+              <button className="icon-btn" onClick={() => openEdit(item)} title="Edit"><BsPencil size={13} /></button>
+            )}
             <button className="icon-btn icon-btn-danger" onClick={() => { setSelected(item); setModal('delete'); }} title="Delete"><BsTrash size={13} /></button>
           </div>
         )}
@@ -99,8 +137,17 @@ export default function ExamCRUD() {
               </select>
             </div>
             <div>
-              <label className="form-label">Date</label>
-              <input type="date" className="form-control" value={date} onChange={e => setDate(e.target.value)} />
+              <label className="form-label">Exam Date</label>
+              <input
+                type="date"
+                className="form-control"
+                value={date}
+                min={modal === 'create' ? today : undefined}
+                onChange={e => setDate(e.target.value)}
+              />
+              {modal === 'create' && (
+                <small style={{ fontSize: 11, color: 'var(--text-3)' }}>Must be today or a future date</small>
+              )}
             </div>
           </div>
         </Modal.Body>
@@ -110,6 +157,26 @@ export default function ExamCRUD() {
             {saving && <span className="spinner-border spinner-border-sm me-2" />}Save
           </button>
         </Modal.Footer>
+      </Modal>
+
+      {/* Mark Complete Confirmation */}
+      <Modal show={modal === 'complete'} onHide={() => setModal(null)} size="sm">
+        <Modal.Body style={{ padding: 28, textAlign: 'center' }}>
+          <BsCheckCircle size={32} style={{ color: 'var(--success)', marginBottom: 12 }} />
+          <p style={{ fontWeight: 600, marginBottom: 6 }}>Mark exam as completed?</p>
+          <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 4 }}>
+            {courseName(selected?.courseId || '')} — {selected && formatEnum(selected.type)}
+          </p>
+          <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 24 }}>
+            Grades can be submitted once the exam is marked completed.
+          </p>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+            <button className="btn btn-success btn-sm" onClick={handleMarkComplete} disabled={saving}>
+              {saving && <span className="spinner-border spinner-border-sm me-2" />}Mark Completed
+            </button>
+          </div>
+        </Modal.Body>
       </Modal>
 
       <Modal show={modal === 'delete'} onHide={() => setModal(null)} size="sm">

@@ -48,7 +48,10 @@ export default function DeptWorkloads() {
       } else {
         setFaculties(allFaculties); setCourses(allCourses); setItems(allWorkloads);
       }
-    } catch { toast.error('Failed to load workloads'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load workloads');
+    }
     finally { setLoading(false); }
   };
 

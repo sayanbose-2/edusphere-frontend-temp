@@ -9,16 +9,25 @@ import { studentService } from '@/services/student.service';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { DataTable } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { GradeStatus } from '@/types/enums';
+import { GradeStatus, Status } from '@/types/enums';
 import { formatEnum } from '@/utils/formatters';
 import type { Column } from '@/components/ui/DataTable';
 import type { Grade, CreateGradeRequest, Exam, Student, Course } from '@/types/academic.types';
 
 type ModalMode = 'create' | 'edit' | 'delete' | null;
 
+function calcGrade(score: number): { letter: string; status: GradeStatus } {
+  if (score >= 90) return { letter: 'A', status: GradeStatus.PASS };
+  if (score >= 80) return { letter: 'B', status: GradeStatus.PASS };
+  if (score >= 70) return { letter: 'C', status: GradeStatus.PASS };
+  if (score >= 60) return { letter: 'D', status: GradeStatus.PASS };
+  return { letter: 'F', status: GradeStatus.FAIL };
+}
+
 export default function GradeList() {
   const [items, setItems] = useState<Grade[]>([]);
-  const [exams, setExams] = useState<Exam[]>([]);
+  const [allExams, setAllExams] = useState<Exam[]>([]);
+  const [completedExams, setCompletedExams] = useState<Exam[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,9 +46,18 @@ export default function GradeList() {
   const load = async () => {
     try {
       setLoading(true);
-      const [g, e, s, c] = await Promise.all([gradeService.getAll(), examService.getAll(), studentService.getAll(), courseService.getAll()]);
-      setItems(g); setExams(e); setStudents(s); setCourses(c);
-    } catch { toast.error('Failed to load grades'); }
+      const [g, allE, compE, s, c] = await Promise.all([
+        gradeService.getAll(),
+        examService.getAll(),
+        examService.getByStatus(Status.COMPLETED),
+        studentService.getAll(),
+        courseService.getAll(),
+      ]);
+      setItems(g); setAllExams(allE); setCompletedExams(compE); setStudents(s); setCourses(c);
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load grades');
+    }
     finally { setLoading(false); }
   };
 
@@ -55,17 +73,36 @@ export default function GradeList() {
     try { setLoading(true); setItems(await gradeService.getByExam(eid)); } catch { toast.error('Filter failed'); } finally { setLoading(false); }
   };
 
-  const openCreate = () => { setSelected(null); setExamId(''); setStudentId(''); setScore(0); setGrade(''); setGradeStatus(GradeStatus.PENDING); setModal('create'); };
-  const openEdit = (item: Grade) => { setSelected(item); setExamId(item.examId); setStudentId(item.studentId); setScore(item.score); setGrade(item.grade); setGradeStatus(item.status); setModal('edit'); };
+  const openCreate = () => {
+    setSelected(null); setExamId(''); setStudentId(''); setScore(0); setGrade(''); setGradeStatus(GradeStatus.PENDING);
+    setModal('create');
+  };
+  const openEdit = (item: Grade) => {
+    setSelected(item); setExamId(item.examId); setStudentId(item.studentId);
+    setScore(item.score); setGrade(item.grade); setGradeStatus(item.status);
+    setModal('edit');
+  };
+
+  const onScoreChange = (val: number) => {
+    setScore(val);
+    const calc = calcGrade(val);
+    setGrade(calc.letter);
+    setGradeStatus(calc.status);
+  };
 
   const handleSave = async () => {
+    if (!examId) { toast.error('Please select an exam'); return; }
+    if (!studentId) { toast.error('Please select a student'); return; }
     setSaving(true);
     try {
       const payload: CreateGradeRequest = { examId, studentId, score, grade, status: gradeStatus };
       if (modal === 'edit' && selected) { await gradeService.update(selected.id!, payload); toast.success('Grade updated'); }
       else { await gradeService.create(payload); toast.success('Grade created'); }
       setModal(null); load();
-    } catch { toast.error('Failed to save grade'); }
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: string } })?.response?.data;
+      toast.error(msg || 'Failed to save grade');
+    }
     finally { setSaving(false); }
   };
 
@@ -78,15 +115,15 @@ export default function GradeList() {
   };
 
   const courseName = (id: string) => courses.find(c => c.id === id)?.title ?? '—';
-  const examLabel = (id: string) => { const e = exams.find(x => x.id === id); return e ? `${courseName(e.courseId)} — ${formatEnum(e.type)}` : '—'; };
+  const examLabel = (id: string) => { const e = allExams.find(x => x.id === id); return e ? `${courseName(e.courseId)} — ${formatEnum(e.type)}` : '—'; };
   const studentName = (id: string) => students.find(s => s.id === id)?.name ?? '—';
 
   const columns: Column<Grade>[] = [
     { key: 'examId',    label: 'Exam',    render: item => examLabel(item.examId) },
     { key: 'studentId', label: 'Student', render: item => studentName(item.studentId) },
-    { key: 'score',     label: 'Score' },
-    { key: 'grade',     label: 'Grade', render: item => <strong style={{ fontSize: 15 }}>{item.grade}</strong> },
-    { key: 'status',    label: 'Status', render: item => <StatusBadge status={item.status} /> },
+    { key: 'score',     label: 'Score',   render: item => `${item.score}/100` },
+    { key: 'grade',     label: 'Grade',   render: item => <strong style={{ fontSize: 15 }}>{item.grade}</strong> },
+    { key: 'status',    label: 'Status',  render: item => <StatusBadge status={item.status} /> },
   ];
 
   return (
@@ -109,7 +146,7 @@ export default function GradeList() {
           <select className="form-select form-select-sm" style={{ minWidth: 200 }} value={filterExamId}
             onChange={e => { setFilterExamId(e.target.value); setFilterStudentId(''); filterByExam(e.target.value); }}>
             <option value="">All exams</option>
-            {exams.map(e => <option key={e.id} value={e.id}>{courseName(e.courseId)} — {formatEnum(e.type)}</option>)}
+            {allExams.map(e => <option key={e.id} value={e.id}>{courseName(e.courseId)} — {formatEnum(e.type)}</option>)}
           </select>
         </div>
       </div>
@@ -127,10 +164,14 @@ export default function GradeList() {
         <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Grade' : 'Add Grade'}</Modal.Title></Modal.Header>
         <Modal.Body>
           <div style={{ marginBottom: 14 }}>
-            <label className="form-label">Exam</label>
+            <label className="form-label">Exam <span style={{ fontSize: 11, color: 'var(--text-3)' }}>(completed exams only)</span></label>
             <select className="form-select" value={examId} onChange={e => setExamId(e.target.value)}>
-              <option value="">Select exam</option>
-              {exams.map(e => <option key={e.id} value={e.id}>{courseName(e.courseId)} — {formatEnum(e.type)}</option>)}
+              <option value="">Select completed exam</option>
+              {completedExams.map(e => (
+                <option key={e.id} value={e.id}>
+                  {courseName(e.courseId)} — {formatEnum(e.type)} ({new Date(e.date).toLocaleDateString()})
+                </option>
+              ))}
             </select>
           </div>
           <div style={{ marginBottom: 14 }}>
@@ -142,12 +183,15 @@ export default function GradeList() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
             <div>
-              <label className="form-label">Score</label>
-              <input type="number" className="form-control" value={score} onChange={e => setScore(Number(e.target.value))} min={0} max={100} />
+              <label className="form-label">Score <span style={{ fontSize: 11, color: 'var(--text-3)' }}>(0–100)</span></label>
+              <input type="number" className="form-control" value={score} onChange={e => onScoreChange(Number(e.target.value))} min={0} max={100} />
             </div>
             <div>
               <label className="form-label">Grade Letter</label>
-              <input className="form-control" value={grade} onChange={e => setGrade(e.target.value)} placeholder="A, B, C…" />
+              <select className="form-select" value={grade} onChange={e => setGrade(e.target.value)}>
+                <option value="">Select</option>
+                {['A', 'B', 'C', 'D', 'F'].map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
             </div>
             <div>
               <label className="form-label">Status</label>
@@ -156,6 +200,9 @@ export default function GradeList() {
               </select>
             </div>
           </div>
+          <small style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6, display: 'block' }}>
+            Grade and status are auto-calculated from score. You can override manually.
+          </small>
         </Modal.Body>
         <Modal.Footer>
           <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>

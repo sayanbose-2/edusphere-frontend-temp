@@ -6,8 +6,8 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ProtectedRoute } from '@/components/ui/ProtectedRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
 import LoginPage from '@/pages/auth/LoginPage';
-import RegisterPage from '@/pages/auth/RegisterPage';
 import ChangePasswordPage from '@/pages/auth/ChangePasswordPage';
+import ProfileSetupPage from '@/pages/auth/ProfileSetupPage';
 import DashboardPage from '@/pages/dashboard/DashboardPage';
 import { Role } from '@/types/enums';
 
@@ -49,17 +49,17 @@ import DeptDepartment from '@/pages/deptHead/DeptDepartment';
 import DeptFaculty from '@/pages/deptHead/DeptFaculty';
 import DeptCourses from '@/pages/deptHead/DeptCourses';
 import DeptCurriculum from '@/pages/deptHead/DeptCurriculum';
+import DeptExams from '@/pages/deptHead/DeptExams';
+import DeptGrades from '@/pages/deptHead/DeptGrades';
 import DeptWorkloads from '@/pages/deptHead/DeptWorkloads';
 import DeptCompliance from '@/pages/deptHead/DeptCompliance';
 import DeptReports from '@/pages/deptHead/DeptReports';
 
 // Compliance pages
-import CompAudits from '@/pages/compliance/CompAudits';
-import CompAuditLogs from '@/pages/compliance/CompAuditLogs';
 import CompRecords from '@/pages/compliance/CompRecords';
-import CompGrades from '@/pages/compliance/CompGrades';
-import CompResearch from '@/pages/compliance/CompResearch';
 import CompReports from '@/pages/compliance/CompReports';
+import CompAudits from '@/pages/compliance/CompAudits';
+import CompGrades from '@/pages/compliance/CompGrades';
 
 function App() {
   return (
@@ -71,7 +71,12 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/register" element={<Navigate to="/login" replace />} />
+
+          {/* Profile setup — requires auth but not AppLayout */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile/setup" element={<ProfileSetupPage />} />
+          </Route>
 
           {/* Protected routes with layout */}
           <Route element={<ProtectedRoute />}>
@@ -124,19 +129,19 @@ function App() {
                 <Route path="/dept/faculty" element={<DeptFaculty />} />
                 <Route path="/dept/courses" element={<DeptCourses />} />
                 <Route path="/dept/curriculum" element={<DeptCurriculum />} />
+                <Route path="/dept/exams" element={<DeptExams />} />
+                <Route path="/dept/grades" element={<DeptGrades />} />
                 <Route path="/dept/workloads" element={<DeptWorkloads />} />
                 <Route path="/dept/compliance" element={<DeptCompliance />} />
                 <Route path="/dept/reports" element={<DeptReports />} />
               </Route>
 
-              {/* Compliance Officer routes */}
-              <Route element={<ProtectedRoute allowedRoles={[Role.COMPLIANCE_OFFICER]} />}>
-                <Route path="/compliance/audits" element={<CompAudits />} />
-                <Route path="/compliance/audit-logs" element={<CompAuditLogs />} />
+              {/* Compliance Officer & Regulator routes */}
+              <Route element={<ProtectedRoute allowedRoles={[Role.COMPLIANCE_OFFICER, Role.REGULATOR]} />}>
                 <Route path="/compliance/records" element={<CompRecords />} />
-                <Route path="/compliance/grades" element={<CompGrades />} />
-                <Route path="/compliance/research" element={<CompResearch />} />
                 <Route path="/compliance/reports" element={<CompReports />} />
+                <Route path="/compliance/audits" element={<CompAudits />} />
+                <Route path="/compliance/grades" element={<CompGrades />} />
               </Route>
             </Route>
           </Route>

@@ -7,10 +7,15 @@ const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+const PUBLIC_PATHS = ['/auth/login', '/auth/refresh'];
+
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const isPublic = PUBLIC_PATHS.some((path) => config.url?.startsWith(path));
+  if (!isPublic) {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
@@ -20,7 +25,8 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const isPublicRequest = PUBLIC_PATHS.some((path) => originalRequest.url?.startsWith(path));
+    if (error.response?.status === 401 && !originalRequest._retry && !isPublicRequest) {
       originalRequest._retry = true;
 
       try {

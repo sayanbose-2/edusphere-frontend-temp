@@ -47,7 +47,10 @@ export default function CompRecords() {
       setItems(data);
       const uniqueTypes = [...new Set(data.map(r => r.entityType))];
       uniqueTypes.forEach(t => fetchEntities(t, false));
-    } catch { toast.error('Failed to load compliance records'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load compliance records');
+    }
     finally { setLoading(false); }
   };
 
@@ -63,12 +66,17 @@ export default function CompRecords() {
         case ComplianceEntityType.CURRICULUM: { const d = await curriculumService.getAll(); list = d.map(c => ({ id: c.id, label: c.description })); break; }
         case ComplianceEntityType.EXAM: { const d = await examService.getAll(); list = d.map(e => ({ id: e.id, label: `${formatEnum(e.type)} — ${e.date}` })); break; }
         case ComplianceEntityType.THESIS: { const d = await thesisService.getAll(); list = d.map(t => ({ id: t.id!, label: t.title })); break; }
-        case ComplianceEntityType.RESEARCH_PROJECT: { const d = await researchService.getAll(); list = d.map(r => ({ id: r.projectID, label: r.title })); break; }
+        case ComplianceEntityType.RESEARCH_PROJECT: { const d = await researchService.getAll(); list = d.map(r => ({ id: r.id, label: r.title })); break; }
         case ComplianceEntityType.STUDENT_DOCUMENT: { const d = await documentService.getAll(); list = d.map(x => ({ id: x.studentDocumentId, label: `${formatEnum(x.docType)}${x.studentName ? ' — ' + x.studentName : ''}` })); break; }
       }
       if (updateList) setEntityList(list);
       setEntityNameMap(prev => { const next = { ...prev }; list.forEach(({ id, label }) => { next[id] = label; }); return next; });
-    } catch { if (updateList) toast.error('Failed to load entities'); }
+    } catch (err: unknown) {
+      if (updateList) {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status !== 403 && status !== 404 && status !== 500) toast.error('Failed to load entities');
+      }
+    }
     finally { if (updateList) setEntitiesLoading(false); }
   };
 
@@ -117,7 +125,7 @@ export default function CompRecords() {
 
   const columns: Column<ComplianceRecord>[] = [
     { key: 'entityType',     label: 'Entity Type', render: item => formatEnum(item.entityType) },
-    { key: 'entityId',       label: 'Entity',      render: item => entityNameMap[item.entityId] ?? <span style={{ color: 'var(--text-2)', fontStyle: 'italic' }}>Loading…</span> },
+    { key: 'entityId',       label: 'Entity',      render: item => entityNameMap[item.entityId] ?? <span style={{ color: 'var(--text-2)', fontStyle: 'italic' }} title={item.entityId}>{item.entityId.slice(0, 8)}…</span> },
     { key: 'notes',          label: 'Notes',       render: item => item.notes ? (item.notes.length > 60 ? item.notes.slice(0, 60) + '…' : item.notes) : '—' },
     { key: 'result',         label: 'Result',      render: item => <StatusBadge status={item.result} /> },
     { key: 'complianceDate', label: 'Date' },

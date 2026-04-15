@@ -62,9 +62,13 @@ export default function MyDocuments() {
   const load = async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get<StudentDocument[]>('/student-documents/me/docs');
-      setDocuments(res.data as DocumentRow[]);
-    } catch { toast.error('Failed to load documents'); }
+      const res = await apiClient.get<{ content: StudentDocument[] }>('/student-documents/me/docs');
+      const content = Array.isArray(res.data) ? res.data : (res.data.content ?? []);
+      setDocuments(content as DocumentRow[]);
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load documents');
+    }
     finally { setLoading(false); }
   };
 

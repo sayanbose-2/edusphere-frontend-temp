@@ -14,7 +14,10 @@ export default function CompResearch() {
   useEffect(() => {
     researchService.getAll()
       .then(setItems)
-      .catch(() => toast.error('Failed to load research projects'))
+      .catch((err: unknown) => {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status !== 404 && status !== 500) toast.error('Failed to load research projects');
+      })
       .finally(() => setLoading(false));
   }, []);
 

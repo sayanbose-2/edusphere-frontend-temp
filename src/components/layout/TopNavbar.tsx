@@ -68,7 +68,7 @@ export function TopNavbar({ onToggleSidebar }: Props) {
             </div>
           ) : (
             notifications.slice(0, 20).map(n => (
-              <Dropdown.Item key={n.notificationId} onClick={() => !n.isRead && markAsRead(n.notificationId)}
+              <Dropdown.Item key={n.id} onClick={() => !n.isRead && markAsRead(n.id)}
                 style={{ padding: '8px 14px', borderBottom: '1px solid var(--border)', opacity: n.isRead ? 0.6 : 1 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                   {!n.isRead && (

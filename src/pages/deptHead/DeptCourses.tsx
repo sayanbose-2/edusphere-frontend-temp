@@ -37,7 +37,10 @@ export default function DeptCourses() {
       const found = allDepts.find(d => d.headId === user?.id) || null;
       setMyDept(found);
       setItems(found ? allCourses.filter(c => c.departmentId === found.id) : allCourses);
-    } catch { toast.error('Failed to load courses'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load courses');
+    }
     finally { setLoading(false); }
   };
 

@@ -1,19 +1,23 @@
 import apiClient from '@/api/client';
-import type { Workload, CreateWorkloadRequest } from '@/types/academic.types';
+import type { Workload, CreateWorkloadRequest, PageResponse } from '@/types/academic.types';
 
 export const workloadService = {
   getAll: () =>
-    apiClient.get<Workload[]>('/workload').then((r) => r.data),
+    apiClient.get<PageResponse<Workload> | Workload[]>('/workloads').then((r) =>
+      Array.isArray(r.data) ? r.data : (r.data.content ?? [])
+    ),
 
   getByFaculty: (facultyId: string) =>
-    apiClient.get<Workload[]>(`/workload/faculty/${facultyId}`).then((r) => r.data),
+    apiClient.get<PageResponse<Workload> | Workload[]>(`/workloads/faculty/${facultyId}`).then((r) =>
+      Array.isArray(r.data) ? r.data : (r.data.content ?? [])
+    ),
 
   create: (data: CreateWorkloadRequest) =>
-    apiClient.post<Workload>('/workload', data).then((r) => r.data),
+    apiClient.post<Workload>('/workloads', data).then((r) => r.data),
 
   update: (id: string, data: CreateWorkloadRequest) =>
-    apiClient.put<Workload>(`/workload/${id}`, data).then((r) => r.data),
+    apiClient.put<Workload>(`/workloads/${id}`, data).then((r) => r.data),
 
   delete: (id: string) =>
-    apiClient.delete(`/workload/${id}`),
+    apiClient.delete(`/workloads/${id}`),
 };

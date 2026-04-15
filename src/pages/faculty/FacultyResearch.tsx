@@ -35,7 +35,10 @@ export default function FacultyResearch() {
   const load = async () => {
     const [rpRes, facRes, stuRes] = await Promise.allSettled([researchService.getAll(), facultyService.getAll(), studentService.getAll()]);
     if (rpRes.status === 'fulfilled') setItems(rpRes.value);
-    else toast.error('Failed to load research projects');
+    else {
+      const status = (rpRes.reason as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load research projects');
+    }
     if (facRes.status === 'fulfilled') setFaculties(facRes.value);
     if (stuRes.status === 'fulfilled') setStudents(stuRes.value);
     setLoading(false);
@@ -58,7 +61,7 @@ export default function FacultyResearch() {
   const handleDelete = async () => {
     if (!selected) return;
     setSaving(true);
-    try { await researchService.delete(selected.projectID); toast.success('Project deleted'); setModal(null); load(); }
+    try { await researchService.delete(selected.id); toast.success('Project deleted'); setModal(null); load(); }
     catch { toast.error('Failed to delete project'); }
     finally { setSaving(false); }
   };
@@ -66,7 +69,7 @@ export default function FacultyResearch() {
   const handleAddFaculty = async () => {
     if (!selected || !addId) return;
     setSaving(true);
-    try { await researchService.addFaculty(selected.projectID, addId); toast.success('Co-investigator added'); setModal(null); load(); }
+    try { await researchService.addFaculty(selected.id, addId); toast.success('Co-investigator added'); setModal(null); load(); }
     catch { toast.error('Failed to add co-investigator'); }
     finally { setSaving(false); }
   };
@@ -74,7 +77,7 @@ export default function FacultyResearch() {
   const handleAddStudent = async () => {
     if (!selected || !addId) return;
     setSaving(true);
-    try { await researchService.addStudent(selected.projectID, addId); toast.success('Student added'); setModal(null); load(); }
+    try { await researchService.addStudent(selected.id, addId); toast.success('Student added'); setModal(null); load(); }
     catch { toast.error('Failed to add student'); }
     finally { setSaving(false); }
   };

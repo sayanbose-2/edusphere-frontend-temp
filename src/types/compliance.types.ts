@@ -1,4 +1,4 @@
-import { AuditStatus, Severity, ComplianceResult, ComplianceEntityType, NotificationType, ReportScope, Status } from '@/types/enums';
+import { AuditStatus, Severity, ComplianceResult, ComplianceEntityType, NotificationType, ReportScope, Status, ComplianceType } from '@/types/enums';
 import type { BaseEntity } from '@/types/academic.types';
 
 // Structured success response returned by mutation endpoints
@@ -13,8 +13,8 @@ export interface ApiResponse {
 // ========================
 
 export interface Audit {
-  auditId: string;
-  officerId: string;
+  id: string;
+  complianceOfficerId: string;
   entityType: string;
   entityId: string;
   scope: string;
@@ -33,12 +33,12 @@ export interface ReviewAuditRequest {
 // ========================
 
 export interface AuditLog extends BaseEntity {
-  auditLogId: string;
+  id: string;
   userId: string;
   action: string;
   resource: string;
   severity: Severity;
-  timestamp: string;
+  createdAt: string;
   details?: string;
   logType: string;
 }
@@ -52,6 +52,7 @@ export interface ComplianceRecord {
   recordedByUserId: string;
   entityId: string;
   entityType: ComplianceEntityType;
+  complianceType: ComplianceType;
   result: ComplianceResult;
   complianceDate: string;
   notes: string;
@@ -62,6 +63,7 @@ export interface CreateComplianceRecordRequest {
   recordedByUserId: string;
   entityId: string;
   entityType: ComplianceEntityType;
+  complianceType: ComplianceType;
   result: ComplianceResult;
   complianceDate: string;
   notes: string;
@@ -72,7 +74,7 @@ export interface CreateComplianceRecordRequest {
 // ========================
 
 export interface Notification {
-  notificationId: string;
+  id: string;
   userId: string;
   entityId?: string;
   message: string;

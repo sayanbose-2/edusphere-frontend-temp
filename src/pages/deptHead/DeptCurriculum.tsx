@@ -64,7 +64,10 @@ export default function DeptCurriculum() {
       setCourses(deptCourses);
       const ids = new Set(deptCourses.map(c => c.id));
       setItems(myDept ? allCurr.filter(cur => ids.has(cur.courseId)) : allCurr);
-    } catch { toast.error('Failed to load curriculums'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load curriculums');
+    }
     finally { setLoading(false); }
   };
 

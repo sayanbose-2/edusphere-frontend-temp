@@ -27,7 +27,10 @@ export default function CompAudits() {
       const data = await auditService.getAll();
       setAllItems(data);
       setItems(data);
-    } catch { toast.error('Failed to load audits'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load audits');
+    }
     finally { setLoading(false); }
   };
 
@@ -45,7 +48,7 @@ export default function CompAudits() {
     setSaving(true);
     try {
       const payload: ReviewAuditRequest = { findings, status: AuditStatus.COMPLETED };
-      await auditService.review(selected.auditId, payload);
+      await auditService.review(selected.id, payload);
       toast.success('Audit reviewed');
       setModal(false);
       setStatusFilter('');

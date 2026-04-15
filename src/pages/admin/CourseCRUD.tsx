@@ -31,7 +31,10 @@ export default function CourseCRUD() {
       setLoading(true);
       const [c, d] = await Promise.all([courseService.getAll(), departmentService.getAll()]);
       setItems(c); setDepartments(d);
-    } catch { toast.error('Failed to load courses'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load courses');
+    }
     finally { setLoading(false); }
   };
 

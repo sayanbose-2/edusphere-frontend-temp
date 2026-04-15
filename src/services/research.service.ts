@@ -1,9 +1,9 @@
 import apiClient from '@/api/client';
-import type { ResearchProject, CreateResearchProjectRequest } from '@/types/academic.types';
+import type { ResearchProject, CreateResearchProjectRequest, PageResponse } from '@/types/academic.types';
 
 export const researchService = {
   getAll: () =>
-    apiClient.get<ResearchProject[]>('/research-projects').then((r) => r.data),
+    apiClient.get<PageResponse<ResearchProject>>('/research-projects').then((r) => r.data.content ?? []),
 
   getById: (id: string) =>
     apiClient.get<ResearchProject>(`/research-projects/${id}`).then((r) => r.data),

@@ -13,7 +13,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:9086',
+        // target: 'http://localhost:6061',
+        target: 'http://localhost:8888',
         changeOrigin: true,
         secure: false,
         // Required for SSE (Server-Sent Events) to work through the dev proxy.

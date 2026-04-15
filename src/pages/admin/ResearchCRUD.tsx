@@ -36,7 +36,10 @@ export default function ResearchCRUD() {
       setLoading(true);
       const [r, f, s] = await Promise.all([researchService.getAll(), facultyService.getAll(), studentService.getAll()]);
       setItems(r); setFaculties(f); setStudents(s);
-    } catch { toast.error('Failed to load research projects'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load research projects');
+    }
     finally { setLoading(false); }
   };
 
@@ -57,7 +60,7 @@ export default function ResearchCRUD() {
   const handleDelete = async () => {
     if (!selected) return;
     setSaving(true);
-    try { await researchService.delete(selected.projectID); toast.success('Project deleted'); setModal(null); load(); }
+    try { await researchService.delete(selected.id); toast.success('Project deleted'); setModal(null); load(); }
     catch { toast.error('Failed to delete project'); }
     finally { setSaving(false); }
   };
@@ -66,7 +69,7 @@ export default function ResearchCRUD() {
     if (!selected || !addId) return;
     setSaving(true);
     try {
-      await researchService.addFaculty(selected.projectID, addId);
+      await researchService.addFaculty(selected.id, addId);
       toast.success('Co-investigator added'); setAddId(''); load();
     } catch { toast.error('Failed to add co-investigator'); }
     finally { setSaving(false); }
@@ -75,7 +78,7 @@ export default function ResearchCRUD() {
   const handleRemoveFaculty = async (fId: string) => {
     if (!selected) return;
     try {
-      await researchService.removeFaculty(selected.projectID, fId);
+      await researchService.removeFaculty(selected.id, fId);
       toast.success('Co-investigator removed'); load();
     } catch { toast.error('Failed to remove co-investigator'); }
   };
@@ -84,7 +87,7 @@ export default function ResearchCRUD() {
     if (!selected || !addId) return;
     setSaving(true);
     try {
-      await researchService.addStudent(selected.projectID, addId);
+      await researchService.addStudent(selected.id, addId);
       toast.success('Student added'); setAddId(''); load();
     } catch { toast.error('Failed to add student'); }
     finally { setSaving(false); }
@@ -93,7 +96,7 @@ export default function ResearchCRUD() {
   const handleRemoveStudent = async (sId: string) => {
     if (!selected) return;
     try {
-      await researchService.removeStudent(selected.projectID, sId);
+      await researchService.removeStudent(selected.id, sId);
       toast.success('Student removed'); load();
     } catch { toast.error('Failed to remove student'); }
   };
@@ -103,7 +106,7 @@ export default function ResearchCRUD() {
 
   // Keep selected in sync after load (so manage modals reflect latest state)
   useEffect(() => {
-    if (selected) setSelected(items.find(i => i.projectID === selected.projectID) ?? null);
+    if (selected) setSelected(items.find(i => i.id === selected.id) ?? null);
   }, [items]);
 
   const columns: Column<ResearchProject>[] = [

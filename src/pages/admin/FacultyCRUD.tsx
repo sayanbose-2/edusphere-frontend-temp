@@ -4,12 +4,14 @@ import { BsPencil, BsTrash, BsPlus } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { departmentService } from '@/services/department.service';
 import { facultyService } from '@/services/faculty.service';
+import { authService } from '@/services/auth.service';
+import { decodeJwt } from '@/lib/jwt';
+import { Role, Status } from '@/types/enums';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { DataTable } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { Status } from '@/types/enums';
 import type { Column } from '@/components/ui/DataTable';
-import type { Faculty, Department, CreateFacultyRequest } from '@/types/academic.types';
+import type { Faculty, Department } from '@/types/academic.types';
 
 type ModalMode = 'create' | 'edit' | 'delete' | null;
 
@@ -21,10 +23,13 @@ export default function FacultyCRUD() {
   const [selected, setSelected] = useState<Faculty | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // IAM fields (create only)
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
+
+  // Profile fields
   const [departmentId, setDepartmentId] = useState('');
   const [position, setPosition] = useState('');
   const [status, setStatus] = useState<Status>(Status.ACTIVE);
@@ -33,47 +38,99 @@ export default function FacultyCRUD() {
     try {
       setLoading(true);
       const [f, d] = await Promise.all([facultyService.getAll(), departmentService.getAll()]);
-      setItems(f); setDepartments(d);
-    } catch { toast.error('Failed to load faculty'); }
-    finally { setLoading(false); }
+      setItems(f);
+      setDepartments(d);
+    } catch (err: unknown) {
+      const errStatus = (err as { response?: { status?: number } })?.response?.status;
+      if (errStatus !== 404 && errStatus !== 500) toast.error('Failed to load faculty');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
 
-  const openCreate = () => { setSelected(null); setName(''); setEmail(''); setPassword(''); setPhone(''); setDepartmentId(''); setPosition(''); setStatus(Status.ACTIVE); setModal('create'); };
-  const openEdit = (item: Faculty) => { setSelected(item); setName(item.name); setEmail(item.email); setPassword(''); setPhone(item.phone); setDepartmentId(item.departmentId); setPosition(item.position); setStatus(item.status); setModal('edit'); };
+  const openCreate = () => {
+    setSelected(null);
+    setName(''); setEmail(''); setPassword(''); setPhone('');
+    setDepartmentId(''); setPosition(''); setStatus(Status.ACTIVE);
+    setModal('create');
+  };
+
+  const openEdit = (item: Faculty) => {
+    setSelected(item);
+    setDepartmentId(item.departmentId);
+    setPosition(item.position);
+    setStatus(item.status);
+    setModal('edit');
+  };
 
   const handleSave = async () => {
     setSaving(true);
     try {
       if (modal === 'edit' && selected) {
-        await facultyService.update(selected.id, { name, email, phone, departmentId, position, status });
+        // Update profile fields only (name/email/phone are IAM-managed)
+        await facultyService.update(selected.id, {
+          userId: selected.userId,
+          position,
+          departmentId,
+          status,
+        });
         toast.success('Faculty updated');
       } else {
-        const payload: CreateFacultyRequest = { name, email, password, phone, departmentId, position, status };
-        await facultyService.create(payload);
-        toast.success('Faculty created');
+        // Step 1: Create IAM user account
+        const authResp = await authService.register({
+          name, email, password, phone,
+          roles: [Role.FACULTY],
+        });
+        // Step 2: Extract userId from the returned token
+        const decoded = decodeJwt(authResp.accessToken);
+        const userId = decoded.userId;
+        // Step 3: Create faculty profile
+        await facultyService.create({ userId, position, departmentId, status });
+        toast.success('Faculty member created');
       }
-      setModal(null); load();
-    } catch { toast.error('Failed to save faculty'); }
-    finally { setSaving(false); }
+      setModal(null);
+      load();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || 'Failed to save faculty');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
     if (!selected) return;
     setSaving(true);
-    try { await facultyService.delete(selected.id); toast.success('Faculty deleted'); setModal(null); load(); }
-    catch { toast.error('Failed to delete faculty'); }
-    finally { setSaving(false); }
+    try {
+      await facultyService.delete(selected.id);
+      toast.success('Faculty deleted');
+      setModal(null);
+      load();
+    } catch {
+      toast.error('Failed to delete faculty');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const deptName = (id: string) => departments.find(d => d.id === id)?.departmentName ?? '—';
+  const deptHeadIds = new Set(departments.map(d => d.headId).filter(Boolean));
 
   const columns: Column<Faculty>[] = [
-    { key: 'name',         label: 'Name' },
+    { key: 'name', label: 'Name', render: item => (
+      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {item.name}
+        {deptHeadIds.has(item.id) && (
+          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 10, background: 'var(--navy, #1a3a5c)', color: '#fff', letterSpacing: '0.03em', whiteSpace: 'nowrap' }}>
+            Dept. Head
+          </span>
+        )}
+      </span>
+    )},
     { key: 'email',        label: 'Email' },
     { key: 'position',     label: 'Position' },
-    { key: 'departmentId', label: 'Department', render: item => item.departmentName ?? deptName(item.departmentId) },
+    { key: 'departmentId', label: 'Department', render: item => item.departmentName ?? departments.find(d => d.id === item.departmentId)?.departmentName ?? '—' },
     { key: 'joinDate',     label: 'Joined', render: item => item.joinDate ? new Date(item.joinDate).toLocaleDateString() : '—' },
     { key: 'status',       label: 'Status', render: item => <StatusBadge status={item.status} /> },
   ];
@@ -93,49 +150,60 @@ export default function FacultyCRUD() {
       />
 
       <Modal show={modal === 'create' || modal === 'edit'} onHide={() => setModal(null)}>
-        <Modal.Header closeButton><Modal.Title>{modal === 'edit' ? 'Edit Faculty' : 'Add Faculty Member'}</Modal.Title></Modal.Header>
+        <Modal.Header closeButton>
+          <Modal.Title>{modal === 'edit' ? 'Edit Faculty' : 'Add Faculty Member'}</Modal.Title>
+        </Modal.Header>
         <Modal.Body>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-            <div>
-              <label className="form-label">Full Name</label>
-              <input className="form-control" value={name} onChange={e => setName(e.target.value)} placeholder="Jane Smith" />
-            </div>
-            <div>
-              <label className="form-label">Email</label>
-              <input type="email" className="form-control" value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@school.edu" />
-            </div>
-          </div>
-          {!selected && (
-            <div style={{ marginBottom: 14 }}>
-              <label className="form-label">Password</label>
-              <input type="password" className="form-control" value={password} onChange={e => setPassword(e.target.value)} placeholder="Initial password" />
-            </div>
+          {modal === 'create' && (
+            <>
+              <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 14, padding: '8px 10px', background: 'var(--bg-2)', borderRadius: 6 }}>
+                Step 1 — Account credentials (used to log in)
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+                <div>
+                  <label className="form-label">Full Name</label>
+                  <input className="form-control" value={name} onChange={e => setName(e.target.value)} placeholder="Jane Smith" required />
+                </div>
+                <div>
+                  <label className="form-label">Email</label>
+                  <input type="email" className="form-control" value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@school.edu" required />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+                <div>
+                  <label className="form-label">Password</label>
+                  <input type="password" className="form-control" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 characters" required />
+                </div>
+                <div>
+                  <label className="form-label">Phone</label>
+                  <input className="form-control" value={phone} onChange={e => setPhone(e.target.value)} />
+                </div>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 14, padding: '8px 10px', background: 'var(--bg-2)', borderRadius: 6 }}>
+                Step 2 — Faculty profile details
+              </p>
+            </>
           )}
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-            <div>
-              <label className="form-label">Phone</label>
-              <input className="form-control" value={phone} onChange={e => setPhone(e.target.value)} />
-            </div>
             <div>
               <label className="form-label">Position</label>
-              <input className="form-control" value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Associate Professor" />
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <div>
-              <label className="form-label">Department</label>
-              <select className="form-select" value={departmentId} onChange={e => setDepartmentId(e.target.value)}>
-                <option value="">Select department</option>
-                {departments.map(d => <option key={d.id} value={d.id}>{d.departmentName}</option>)}
-              </select>
+              <input className="form-control" value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Associate Professor" required />
             </div>
             <div>
               <label className="form-label">Status</label>
               <select className="form-select" value={status} onChange={e => setStatus(e.target.value as Status)}>
-                <option value="ACTIVE">Active</option>
-                <option value="INACTIVE">Inactive</option>
+                <option value={Status.ACTIVE}>Active</option>
+                <option value={Status.INACTIVE}>Inactive</option>
               </select>
             </div>
+          </div>
+          <div>
+            <label className="form-label">Department</label>
+            <select className="form-select" value={departmentId} onChange={e => setDepartmentId(e.target.value)} required>
+              <option value="">Select department</option>
+              {departments.map(d => <option key={d.id} value={d.id}>{d.departmentName}</option>)}
+            </select>
           </div>
         </Modal.Body>
         <Modal.Footer>

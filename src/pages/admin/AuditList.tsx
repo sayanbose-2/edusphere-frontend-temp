@@ -22,7 +22,10 @@ export default function AuditList() {
 
   const load = async () => {
     try { setLoading(true); setItems(await auditService.getAll()); }
-    catch { toast.error('Failed to load audits'); }
+    catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load audits');
+    }
     finally { setLoading(false); }
   };
 
@@ -39,7 +42,7 @@ export default function AuditList() {
     if (!selected) return;
     setSaving(true);
     try {
-      await auditService.review(selected.auditId, { findings, status });
+      await auditService.review(selected.id, { findings, status });
       toast.success('Audit reviewed');
       setModal(false);
       load();

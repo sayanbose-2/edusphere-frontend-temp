@@ -15,7 +15,10 @@ export default function DeptCompliance() {
   useEffect(() => {
     complianceService.getAll()
       .then(setItems)
-      .catch(() => toast.error('Failed to load compliance records'))
+      .catch((err: unknown) => {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status !== 404 && status !== 500) toast.error('Failed to load compliance records');
+      })
       .finally(() => setLoading(false));
   }, []);
 

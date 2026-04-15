@@ -31,12 +31,21 @@ export default function CompReports() {
   const [status, setStatus] = useState<Status>('ACTIVE' as Status);
 
   const load = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const [reports, depts] = await Promise.all([reportService.getAll(), departmentService.getAll()]);
-      setItems(reports); setDepartments(depts);
-    } catch { toast.error('Failed to load reports'); }
-    finally { setLoading(false); }
+      const reports = await reportService.getAll();
+      setItems(reports);
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load reports');
+    }
+    try {
+      const depts = await departmentService.getAll();
+      setDepartments(depts);
+    } catch {
+      // departments are supplementary; compliance officer may not have access
+    }
+    setLoading(false);
   };
 
   useEffect(() => { load(); }, []);

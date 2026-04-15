@@ -20,7 +20,7 @@ interface Props<T> {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowKey(item: any, i: number): string {
-  return item.id ?? item.auditId ?? item.notificationId ?? item.projectID ?? item.studentDocumentId ?? String(i);
+  return item.id ?? item.auditId ?? item.notificationId ?? item.studentDocumentId ?? String(i);
 }
 
 function SkeletonRows({ cols }: { cols: number }) {
@@ -42,13 +42,15 @@ function SkeletonRows({ cols }: { cols: number }) {
 export function DataTable<T>({ columns, data, loading, searchable = true, onRowClick, actions }: Props<T>) {
   const [search, setSearch] = useState('');
 
+  const safeData = Array.isArray(data) ? data : [];
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return data;
+    if (!search.trim()) return safeData;
     const q = search.toLowerCase();
-    return data.filter(item =>
+    return safeData.filter(item =>
       columns.some(col => String((item as Record<string, unknown>)[col.key] ?? '').toLowerCase().includes(q))
     );
-  }, [data, columns, search]);
+  }, [safeData, columns, search]);
 
   const colCount = columns.length + (actions ? 1 : 0);
 
@@ -67,9 +69,9 @@ export function DataTable<T>({ columns, data, loading, searchable = true, onRowC
             />
           </div>
           <span style={{ fontSize: 12, color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
-            {loading ? 'Loading…' : filtered.length !== data.length
-              ? `${filtered.length} of ${data.length}`
-              : `${data.length} record${data.length !== 1 ? 's' : ''}`}
+            {loading ? 'Loading…' : filtered.length !== safeData.length
+              ? `${filtered.length} of ${safeData.length}`
+              : `${safeData.length} record${safeData.length !== 1 ? 's' : ''}`}
           </span>
         </div>
       )}

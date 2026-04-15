@@ -1,6 +1,21 @@
 import { Status, ExamType, GradeStatus, ProjectStatus, ThesisStatus, DocumentType, Role } from '@/types/enums';
 
 // ========================
+// Pagination
+// ========================
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
+// ========================
 // Base Entity
 // ========================
 
@@ -29,6 +44,7 @@ export interface User extends BaseEntity {
 // ========================
 
 export interface Student extends BaseEntity {
+  userId: string;
   name: string;
   email: string;
   phone: string;
@@ -39,11 +55,16 @@ export interface Student extends BaseEntity {
   status: Status;
 }
 
+/** Matches backend StudentRequestDTO — sent to POST /students and PUT /students/{id} */
 export interface CreateStudentRequest {
-  name: string;
-  email: string;
-  password: string;
-  phone: string;
+  userId: string;
+  dob: string;
+  gender: string;
+  address: string;
+}
+
+/** Matches backend StudentSelfRequestDTO — sent to POST /students/me (student self-creates on first login) */
+export interface StudentSelfCreateRequest {
   dob: string;
   gender: string;
   address: string;
@@ -54,6 +75,7 @@ export interface CreateStudentRequest {
 // ========================
 
 export interface Faculty extends BaseEntity {
+  userId: string;
   name: string;
   email: string;
   phone: string;
@@ -64,14 +86,17 @@ export interface Faculty extends BaseEntity {
   status: Status;
 }
 
+/** Matches backend FacultyRequestDTO — sent to POST /faculties and PUT /faculties/{id} */
 export interface CreateFacultyRequest {
-  name: string;
-  email: string;
-  password: string;
-  phone: string;
-  departmentId: string;
+  userId: string;
   position: string;
+  departmentId: string;
   status: Status;
+}
+
+/** Matches backend FacultySelfRequestDTO — sent to POST /faculties/me (faculty self-creates stub on first login) */
+export interface FacultySelfCreateRequest {
+  position?: string;
 }
 
 // ========================
@@ -208,7 +233,7 @@ export interface CreateWorkloadRequest {
 // ========================
 
 export interface ResearchProject {
-  projectID: string;
+  id: string;
   title: string;
   facultyId: string;
   status: ProjectStatus;

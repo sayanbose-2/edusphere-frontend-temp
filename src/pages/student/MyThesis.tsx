@@ -3,6 +3,7 @@ import { Modal } from 'react-bootstrap';
 import { BsPlus } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { facultyService } from '@/services/faculty.service';
+import { studentService } from '@/services/student.service';
 import { thesisService } from '@/services/thesis.service';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { DataTable } from '@/components/ui/DataTable';
@@ -18,6 +19,7 @@ export default function MyThesis() {
   const [modal, setModal] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const [myStudentId, setMyStudentId] = useState('');
   const [title, setTitle] = useState('');
   const [submissionDate, setSubmissionDate] = useState('');
   const [supervisorId, setSupervisorId] = useState('');
@@ -25,9 +27,14 @@ export default function MyThesis() {
   const load = async () => {
     try {
       setLoading(true);
-      const [thesisData, facData] = await Promise.all([thesisService.getMy(), facultyService.getAll()]);
-      setTheses(thesisData); setFaculties(facData);
-    } catch { toast.error('Failed to load theses'); }
+      const [thesisData, me] = await Promise.all([thesisService.getMy(), studentService.getMe()]);
+      setTheses(thesisData); setMyStudentId(me.id);
+      // Faculty list is used only for supervisor names — student may not have access, so load separately
+      try { const facData = await facultyService.getAll(); setFaculties(facData); } catch { /* student role may lack permission */ }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load theses');
+    }
     finally { setLoading(false); }
   };
 
@@ -38,7 +45,7 @@ export default function MyThesis() {
   const handleSubmit = async () => {
     setSaving(true);
     try {
-      const payload: CreateThesisRequest = { title, supervisorId, submissionDate, status: 'SUBMITTED' as ThesisStatus };
+      const payload: CreateThesisRequest = { studentId: myStudentId, title, supervisorId, submissionDate, status: 'SUBMITTED' as ThesisStatus };
       await thesisService.create(payload);
       toast.success('Thesis submitted'); setModal(false); load();
     } catch { toast.error('Failed to submit thesis'); }

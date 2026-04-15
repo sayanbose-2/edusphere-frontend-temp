@@ -18,7 +18,10 @@ export default function CompAuditLogs() {
     try {
       setLoading(true);
       setAllItems(await auditLogService.getAll());
-    } catch { toast.error('Failed to load audit logs'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load audit logs');
+    }
     finally { setLoading(false); }
   };
 
@@ -37,7 +40,7 @@ export default function CompAuditLogs() {
     { key: 'logType',   label: 'Type',     render: item => formatEnum(item.logType) },
     { key: 'severity',  label: 'Severity', render: item => <StatusBadge status={item.severity} /> },
     { key: 'details',   label: 'Details',  render: item => item.details ? (item.details.length > 60 ? item.details.slice(0, 60) + '…' : item.details) : '—' },
-    { key: 'timestamp', label: 'Timestamp' },
+    { key: 'createdAt', label: 'Timestamp', render: item => item.createdAt ? new Date(item.createdAt).toLocaleString() : '—' },
   ];
 
   return (

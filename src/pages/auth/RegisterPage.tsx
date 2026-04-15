@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Role } from '@/types/enums';
 import { toast } from 'react-toastify';
 import { BsMortarboardFill } from 'react-icons/bs';
-import { formatEnum } from '@/utils/formatters';
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', selectedRole: Role.STUDENT as Role });
@@ -22,8 +21,17 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register({ name: form.name, email: form.email, password: form.password, phone: form.phone, roles: [form.selectedRole] });
-      toast.success('Account created! Please sign in.');
-      navigate('/login');
+      // Auto-logged in — clear any old setup flag so the setup page is always shown after fresh registration
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        try {
+          const { decodeJwt } = await import('@/lib/jwt');
+          const decoded = decodeJwt(token);
+          localStorage.removeItem(`profileSetupSeen_${decoded.userId}`);
+        } catch { /* ignore */ }
+      }
+      toast.success('Account created! Please complete your profile.');
+      navigate('/profile/setup');
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { message?: string; errors?: Record<string, string> } } })?.response?.data;
       const msg = (data?.errors ? Object.values(data.errors).join(', ') : undefined) || data?.message || 'Registration failed';
@@ -58,15 +66,14 @@ export default function RegisterPage() {
             <input type="password" minLength={8} className="form-control" name="password" value={form.password} onChange={handleChange} placeholder="Min. 8 characters" required />
           </div>
           <div style={{ marginBottom: 14 }}>
-            <label className="form-label">Phone</label>
+            <label className="form-label">Phone <span style={{ color: 'var(--text-3)', fontSize: 12 }}>(optional)</span></label>
             <input type="text" className="form-control" name="phone" value={form.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" />
           </div>
           <div style={{ marginBottom: 24 }}>
-            <label className="form-label">Role</label>
+            <label className="form-label">I am a</label>
             <select className="form-select" name="selectedRole" value={form.selectedRole} onChange={handleChange}>
-              {Object.values(Role).map(r => (
-                <option key={r} value={r}>{formatEnum(r)}</option>
-              ))}
+              <option value={Role.STUDENT}>Student</option>
+              <option value={Role.FACULTY}>Faculty Member</option>
             </select>
           </div>
           <button type="submit" className="btn btn-primary w-100" disabled={loading} style={{ padding: '10px', fontWeight: 600, fontSize: 14 }}>

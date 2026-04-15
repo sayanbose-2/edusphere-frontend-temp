@@ -57,6 +57,8 @@ const deptHeadMenu: MenuItem[] = [
   { label: 'Faculty',        path: '/dept/faculty',      icon: 'BsPersonBadge',         section: 'Department' },
   { label: 'Courses',        path: '/dept/courses',      icon: 'BsBook',                section: 'Department' },
   { label: 'Curriculum',     path: '/dept/curriculum',   icon: 'BsJournalText',         section: 'Department' },
+  { label: 'Exams',          path: '/dept/exams',        icon: 'BsClipboardCheck',      section: 'Academics' },
+  { label: 'Grades',         path: '/dept/grades',       icon: 'BsBarChart',            section: 'Academics' },
   { label: 'Workloads',      path: '/dept/workloads',    icon: 'BsBriefcase',           section: 'Department' },
   { label: 'Compliance',     path: '/dept/compliance',   icon: 'BsClipboard2Check',     section: 'Oversight' },
   { label: 'Reports',        path: '/dept/reports',      icon: 'BsFileEarmarkBarGraph', section: 'Oversight' },
@@ -64,12 +66,14 @@ const deptHeadMenu: MenuItem[] = [
 
 const complianceMenu: MenuItem[] = [
   { label: 'Dashboard',           path: '/dashboard',              icon: 'BsSpeedometer2' },
-  { label: 'Audits',              path: '/compliance/audits',      icon: 'BsShieldCheck',         section: 'Monitoring' },
-  { label: 'Audit Logs',          path: '/compliance/audit-logs',  icon: 'BsListUl',              section: 'Monitoring' },
   { label: 'Compliance Records',  path: '/compliance/records',     icon: 'BsClipboard2Check',     section: 'Monitoring' },
-  { label: 'Grades',              path: '/compliance/grades',      icon: 'BsBarChart',            section: 'Records' },
-  { label: 'Research',            path: '/compliance/research',    icon: 'BsSearch',              section: 'Records' },
-  { label: 'Reports',             path: '/compliance/reports',     icon: 'BsFileEarmarkBarGraph', section: 'Records' },
+  { label: 'Reports',             path: '/compliance/reports',     icon: 'BsFileEarmarkBarGraph', section: 'Monitoring' },
+];
+
+const regulatorMenu: MenuItem[] = [
+  { label: 'Dashboard',           path: '/dashboard',              icon: 'BsSpeedometer2' },
+  { label: 'Audits',              path: '/compliance/audits',      icon: 'BsShieldCheck',         section: 'Oversight' },
+  { label: 'Exam Grades',         path: '/compliance/grades',      icon: 'BsBarChart',            section: 'Oversight' },
 ];
 
 export function getMenuForRole(roles: Role[]): MenuItem[] {
@@ -77,6 +81,7 @@ export function getMenuForRole(roles: Role[]): MenuItem[] {
   if (roles.includes(Role.DEPARTMENT_HEAD))   return deptHeadMenu;
   if (roles.includes(Role.FACULTY))           return facultyMenu;
   if (roles.includes(Role.COMPLIANCE_OFFICER))return complianceMenu;
+  if (roles.includes(Role.REGULATOR))         return regulatorMenu;
   if (roles.includes(Role.STUDENT))           return studentMenu;
   return [{ label: 'Dashboard', path: '/dashboard', icon: 'BsSpeedometer2' }];
 }

@@ -14,7 +14,10 @@ export default function CompGrades() {
   useEffect(() => {
     gradeService.getAll()
       .then(setItems)
-      .catch(() => toast.error('Failed to load grades'))
+      .catch((err: unknown) => {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status !== 404 && status !== 500) toast.error('Failed to load grades');
+      })
       .finally(() => setLoading(false));
   }, []);
 

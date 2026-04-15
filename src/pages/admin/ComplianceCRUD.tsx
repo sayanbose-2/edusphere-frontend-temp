@@ -19,7 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatEnum } from '@/utils/formatters';
 import type { Column } from '@/components/ui/DataTable';
 import type { ComplianceRecord, CreateComplianceRecordRequest } from '@/types/compliance.types';
-import { ComplianceResult, ComplianceEntityType } from '@/types/enums';
+import { ComplianceResult, ComplianceEntityType, ComplianceType } from '@/types/enums';
 
 type ModalMode = 'create' | 'edit' | 'delete' | null;
 
@@ -33,8 +33,9 @@ export default function ComplianceCRUD() {
 
   const [entityType, setEntityType] = useState<string>(ComplianceEntityType.STUDENT);
   const [entityId, setEntityId] = useState('');
+  const [complianceType, setComplianceType] = useState<string>(ComplianceType.COURSE);
   const [notes, setNotes] = useState('');
-  const [result, setResult] = useState<string>(ComplianceResult.COMPLIANT);
+  const [result, setResult] = useState<string>(ComplianceResult.PENDING);
   const [complianceDate, setComplianceDate] = useState('');
   const [entityList, setEntityList] = useState<{ id: string; label: string }[]>([]);
   const [entitiesLoading, setEntitiesLoading] = useState(false);
@@ -47,7 +48,10 @@ export default function ComplianceCRUD() {
       setItems(data);
       const uniqueTypes = [...new Set(data.map(r => r.entityType))];
       uniqueTypes.forEach(t => fetchEntities(t));
-    } catch { toast.error('Failed to load compliance records'); }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404 && status !== 500) toast.error('Failed to load compliance records');
+    }
     finally { setLoading(false); }
   };
 
@@ -63,7 +67,7 @@ export default function ComplianceCRUD() {
         case ComplianceEntityType.CURRICULUM:       { const d = await curriculumService.getAll(); list = d.map(c => ({ id: c.id, label: c.description })); break; }
         case ComplianceEntityType.EXAM:             { const d = await examService.getAll();       list = d.map(e => ({ id: e.id, label: `${formatEnum(e.type)} — ${e.date}` })); break; }
         case ComplianceEntityType.THESIS:           { const d = await thesisService.getAll();     list = d.map(t => ({ id: t.id!, label: t.title })); break; }
-        case ComplianceEntityType.RESEARCH_PROJECT: { const d = await researchService.getAll();   list = d.map(r => ({ id: r.projectID, label: r.title })); break; }
+        case ComplianceEntityType.RESEARCH_PROJECT: { const d = await researchService.getAll();   list = d.map(r => ({ id: r.id, label: r.title })); break; }
         case ComplianceEntityType.STUDENT_DOCUMENT: { const d = await documentService.getAll();   list = d.map(doc => ({ id: doc.studentDocumentId, label: `${formatEnum(doc.docType)}${doc.studentName ? ' — ' + doc.studentName : ''}` })); break; }
       }
       setEntityList(list);
@@ -74,12 +78,12 @@ export default function ComplianceCRUD() {
 
   useEffect(() => { load(); }, []);
 
-  const resetForm = () => { setEntityType(ComplianceEntityType.STUDENT); setEntityId(''); setNotes(''); setResult(ComplianceResult.COMPLIANT); setComplianceDate(''); };
+  const resetForm = () => { setEntityType(ComplianceEntityType.STUDENT); setEntityId(''); setComplianceType(ComplianceType.COURSE); setNotes(''); setResult(ComplianceResult.PENDING); setComplianceDate(''); };
 
   const openCreate = () => { resetForm(); fetchEntities(ComplianceEntityType.STUDENT); setSelected(null); setModal('create'); };
   const openEdit = (item: ComplianceRecord) => {
     setSelected(item); setEntityType(item.entityType); setEntityId(item.entityId);
-    setNotes(item.notes); setResult(item.result); setComplianceDate(item.complianceDate);
+    setComplianceType(item.complianceType); setNotes(item.notes); setResult(item.result); setComplianceDate(item.complianceDate);
     fetchEntities(item.entityType); setModal('edit');
   };
 
@@ -88,7 +92,7 @@ export default function ComplianceCRUD() {
     if (!complianceDate) { toast.error('Select a date'); return; }
     setSaving(true);
     try {
-      const payload: CreateComplianceRecordRequest = { recordedByUserId: user?.id || '', entityId, entityType: entityType as ComplianceEntityType, result: result as ComplianceResult, complianceDate, notes };
+      const payload: CreateComplianceRecordRequest = { recordedByUserId: user?.id || '', entityId, entityType: entityType as ComplianceEntityType, complianceType: complianceType as ComplianceType, result: result as ComplianceResult, complianceDate, notes };
       if (modal === 'edit' && selected) { await complianceService.update(selected.id, payload); toast.success('Record updated'); }
       else { await complianceService.create(payload); toast.success('Record created'); }
       setModal(null); load();
@@ -107,6 +111,7 @@ export default function ComplianceCRUD() {
   const columns: Column<ComplianceRecord>[] = [
     { key: 'entityType', label: 'Entity Type', render: item => formatEnum(item.entityType) },
     { key: 'entityId',   label: 'Entity', render: item => entityNameMap[item.entityId] ?? <span style={{ color: 'var(--text-3)', fontStyle: 'italic' }}>—</span> },
+    { key: 'complianceType', label: 'Compliance Type', render: item => formatEnum(item.complianceType) },
     { key: 'notes',      label: 'Notes', render: item => item.notes.length > 50 ? item.notes.slice(0, 50) + '…' : item.notes },
     { key: 'result',     label: 'Result', render: item => <StatusBadge status={item.result} /> },
     { key: 'complianceDate', label: 'Date', render: item => new Date(item.complianceDate).toLocaleDateString() },
@@ -140,6 +145,12 @@ export default function ComplianceCRUD() {
             <select className="form-select" value={entityId} onChange={e => setEntityId(e.target.value)} disabled={entitiesLoading}>
               <option value="">{entitiesLoading ? 'Loading…' : `Select ${formatEnum(entityType)}`}</option>
               {entityList.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label className="form-label">Compliance Type</label>
+            <select className="form-select" value={complianceType} onChange={e => setComplianceType(e.target.value)}>
+              {Object.values(ComplianceType).map(t => <option key={t} value={t}>{formatEnum(t)}</option>)}
             </select>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>

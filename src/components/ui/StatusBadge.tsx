@@ -17,6 +17,8 @@ const MAP: Record<string, { label: string; color: string; bg: string }> = {
   COMPLIANT:           { label: 'Compliant',         color: '#16A34A', bg: 'rgba(22,163,74,0.1)'   },
   NON_COMPLIANT:       { label: 'Non-Compliant',     color: '#DC2626', bg: 'rgba(220,38,38,0.1)'   },
   PARTIALLY_COMPLIANT: { label: 'Partial',           color: '#D97706', bg: 'rgba(217,119,6,0.1)'   },
+  DEFERRED:            { label: 'Deferred',          color: '#7C3AED', bg: 'rgba(124,58,237,0.1)'  },
+  NOT_APPLICABLE:      { label: 'N/A',               color: '#64748B', bg: 'rgba(100,116,139,0.1)' },
   UNDER_REVIEW:        { label: 'Under Review',      color: '#0284C7', bg: 'rgba(2,132,199,0.1)'   },
   EXEMPTED:            { label: 'Exempted',          color: '#7C3AED', bg: 'rgba(124,58,237,0.1)'  },
   INFO:                { label: 'Info',              color: '#0284C7', bg: 'rgba(2,132,199,0.1)'   },
@@ -31,7 +33,8 @@ const MAP: Record<string, { label: string; color: string; bg: string }> = {
 };
 
 export function StatusBadge({ status }: { status: string }) {
-  const cfg = MAP[status] ?? { label: status.replace(/_/g, ' '), color: '#64748B', bg: 'rgba(100,116,139,0.1)' };
+  const key = (status ?? '').toUpperCase();  // normalize to uppercase
+  const cfg = MAP[key] ?? { label: status.replace(/_/g, ' '), color: '#64748B', bg: 'rgba(100,116,139,0.1)' };
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center',

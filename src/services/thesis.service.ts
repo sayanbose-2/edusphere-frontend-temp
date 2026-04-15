@@ -1,22 +1,22 @@
 import apiClient from '@/api/client';
-import type { Thesis, CreateThesisRequest } from '@/types/academic.types';
+import type { Thesis, CreateThesisRequest, PageResponse } from '@/types/academic.types';
 
 export const thesisService = {
   getAll: () =>
-    apiClient.get<Thesis[]>('/thesis').then((r) => r.data),
+    apiClient.get<PageResponse<Thesis>>('/theses').then((r) => r.data.content ?? []),
 
   getMy: () =>
-    apiClient.get<Thesis[]>('/thesis/my').then((r) => r.data),
+    apiClient.get<PageResponse<Thesis>>('/theses/my').then((r) => r.data.content ?? []),
 
   getByStudent: (studentId: string) =>
-    apiClient.get<Thesis[]>(`/thesis/student/${studentId}`).then((r) => r.data),
+    apiClient.get<PageResponse<Thesis>>(`/theses/student/${studentId}`).then((r) => r.data.content ?? []),
 
   create: (data: CreateThesisRequest) =>
-    apiClient.post<Thesis>('/thesis', data).then((r) => r.data),
+    apiClient.post<Thesis>('/theses', data).then((r) => r.data),
 
   update: (id: string, data: CreateThesisRequest) =>
-    apiClient.put<Thesis>(`/thesis/${id}`, data).then((r) => r.data),
+    apiClient.put<Thesis>(`/theses/${id}`, data).then((r) => r.data),
 
   delete: (id: string) =>
-    apiClient.delete(`/thesis/${id}`),
+    apiClient.delete(`/theses/${id}`),
 };

@@ -1,10 +1,10 @@
 import apiClient from '@/api/client';
-import type { Curriculum, CreateCurriculumRequest } from '@/types/academic.types';
+import type { Curriculum, CreateCurriculumRequest, PageResponse } from '@/types/academic.types';
 import type { ApiResponse } from '@/types/compliance.types';
 
 export const curriculumService = {
   getAll: () =>
-    apiClient.get<Curriculum[]>('/curriculums').then((r) => r.data),
+    apiClient.get<PageResponse<Curriculum>>('/curriculums').then((r) => r.data.content ?? []),
 
   getById: (id: string) =>
     apiClient.get<Curriculum>(`/curriculums/${id}`).then((r) => r.data),

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { Role } from '@/types/enums';
 import { toast } from 'react-toastify';
 import { BsMortarboardFill, BsBook, BsPeopleFill, BsAwardFill } from 'react-icons/bs';
 
@@ -15,9 +16,12 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await login({ email, password });
+      const roles = await login({ email, password });
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      // Students and Faculty always check profile setup on login.
+      // ProfileSetupPage internally redirects to dashboard if profile already exists.
+      const needsProfileCheck = roles.some(r => r === Role.STUDENT || r === Role.FACULTY);
+      navigate(needsProfileCheck ? '/profile/setup' : '/dashboard', { replace: true });
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Invalid credentials';
       toast.error(msg);
@@ -63,7 +67,9 @@ export default function LoginPage() {
               <BsMortarboardFill size={20} style={{ color: 'var(--blue)' }} />
             </div>
             <h5 style={{ color: 'var(--text)', fontWeight: 700, margin: '0 0 5px', fontSize: 18 }}>Sign in to EduSphere</h5>
-            <p style={{ color: 'var(--text-2)', fontSize: 13, margin: 0 }}>Enter your credentials to continue</p>
+            <p style={{ color: 'var(--text-2)', fontSize: 13, margin: 0 }}>
+              Use the credentials provided by your administrator
+            </p>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -82,8 +88,7 @@ export default function LoginPage() {
           </form>
 
           <p style={{ textAlign: 'center', marginTop: 20, marginBottom: 0, fontSize: 13, color: 'var(--text-2)' }}>
-            Don't have an account?{' '}
-            <Link to="/register" style={{ color: 'var(--blue)', fontWeight: 600 }}>Create one</Link>
+            Contact your administrator if you need access.
           </p>
         </div>
       </div>
