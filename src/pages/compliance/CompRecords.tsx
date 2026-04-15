@@ -18,7 +18,7 @@ import type { Column } from '@/components/ui/DataTable';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import type { ComplianceRecord, CreateComplianceRecordRequest } from '@/types/compliance.types';
-import { ComplianceResult, ComplianceEntityType } from '@/types/enums';
+import { ComplianceResult, ComplianceEntityType, ComplianceType } from '@/types/enums';
 import { formatEnum } from '@/utils/formatters';
 
 type ModalMode = 'create' | 'edit' | 'delete' | null;
@@ -34,7 +34,8 @@ export default function CompRecords() {
   const [entityType, setEntityType] = useState<string>(ComplianceEntityType.STUDENT);
   const [entityId, setEntityId] = useState('');
   const [notes, setNotes] = useState('');
-  const [result, setResult] = useState<string>(ComplianceResult.COMPLIANT);
+  const [result, setResult] = useState<string>(ComplianceResult.PASS);
+  const [complianceType, setComplianceType] = useState<string>(ComplianceType.COURSE);
   const [complianceDate, setComplianceDate] = useState('');
   const [entityList, setEntityList] = useState<{ id: string; label: string }[]>([]);
   const [entitiesLoading, setEntitiesLoading] = useState(false);
@@ -86,7 +87,7 @@ export default function CompRecords() {
 
   const openCreate = () => {
     setSelected(null); setEntityType(ComplianceEntityType.STUDENT); setEntityId('');
-    setNotes(''); setResult(ComplianceResult.COMPLIANT); setComplianceDate('');
+    setNotes(''); setResult(ComplianceResult.PASS); setComplianceType(ComplianceType.COURSE); setComplianceDate('');
     fetchEntities(ComplianceEntityType.STUDENT);
     setModal('create');
   };
@@ -106,6 +107,7 @@ export default function CompRecords() {
       const payload: CreateComplianceRecordRequest = {
         recordedByUserId: user?.id || '',
         entityId, entityType: entityType as ComplianceEntityType,
+        complianceType: complianceType as ComplianceType,
         result: result as ComplianceResult, complianceDate, notes,
       };
       if (modal === 'edit' && selected) { await complianceService.update(selected.id, payload); toast.success('Record updated'); }

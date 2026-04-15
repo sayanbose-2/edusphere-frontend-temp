@@ -110,7 +110,7 @@ export default function AdminDashboard() {
             {audits.length === 0 ? (
               <tr><td colSpan={4} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>No audits recorded yet</td></tr>
             ) : audits.map(a => (
-              <tr key={a.auditId}>
+              <tr key={a.id}>
                 <td>{a.entityType}</td>
                 <td>{a.scope}</td>
                 <td style={{ color: 'var(--text-2)' }}>{new Date(a.auditDate).toLocaleDateString()}</td>
