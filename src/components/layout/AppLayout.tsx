@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { TopNavbar } from './TopNavbar';
 
-export function AppLayout() {
+const AppLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -17,6 +17,7 @@ export function AppLayout() {
       </div>
     </div>
   );
-}
+};
 
+export { AppLayout };
 export default AppLayout;

@@ -5,7 +5,7 @@ import { Role } from '@/types/enums';
 import { toast } from 'react-toastify';
 import { BsMortarboardFill, BsBook, BsPeopleFill, BsAwardFill } from 'react-icons/bs';
 
-export default function LoginPage() {
+const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -94,4 +94,6 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}
+};
+
+export default LoginPage;

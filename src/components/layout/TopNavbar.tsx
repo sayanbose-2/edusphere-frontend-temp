@@ -8,7 +8,7 @@ import { getMenuForRole } from '@/utils/sidebarMenu';
 
 interface Props { onToggleSidebar: () => void; }
 
-export function TopNavbar({ onToggleSidebar }: Props) {
+const TopNavbar = ({ onToggleSidebar }: Props) => {
   const { user, logout } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { theme, toggleTheme } = useTheme();
@@ -105,6 +105,7 @@ export function TopNavbar({ onToggleSidebar }: Props) {
       </Dropdown>
     </header>
   );
-}
+};
 
+export { TopNavbar };
 export default TopNavbar;

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-import { authService } from '@/services/auth.service';
-import { PageHeader } from '@/components/ui/PageHeader';
+import apiClient from '@/api/client';
+import { PageHeader } from '@/components/common/PageHeader';
 
-export default function ChangePasswordPage() {
+const ChangePasswordPage = () => {
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
 
@@ -13,7 +13,7 @@ export default function ChangePasswordPage() {
     if (form.newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return; }
     setLoading(true);
     try {
-      await authService.changePassword({ currentPassword: form.currentPassword, newPassword: form.newPassword });
+      await apiClient.post('/auth/change-password', { currentPassword: form.currentPassword, newPassword: form.newPassword });
       toast.success('Password changed successfully');
       setForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err: unknown) {
@@ -49,4 +49,6 @@ export default function ChangePasswordPage() {
       </div>
     </>
   );
-}
+};
+
+export default ChangePasswordPage;

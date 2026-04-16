@@ -1,6 +1,6 @@
-import type { JwtPayload } from '@/types/auth.types';
+import type { IJwtPayload } from '@/types/authTypes';
 
-export function decodeJwt(token: string): JwtPayload {
+const decodeJwt = (token: string): IJwtPayload => {
   const parts = token.split('.');
   if (parts.length !== 3 || !parts[1]) {
     throw new Error('Invalid JWT token format');
@@ -14,13 +14,15 @@ export function decodeJwt(token: string): JwtPayload {
       .join('')
   );
   return JSON.parse(jsonPayload);
-}
+};
 
-export function isTokenExpired(token: string): boolean {
+const isTokenExpired = (token: string): boolean => {
   try {
     const payload = decodeJwt(token);
     return payload.exp * 1000 < Date.now();
   } catch {
     return true;
   }
-}
+};
+
+export { decodeJwt, isTokenExpired };

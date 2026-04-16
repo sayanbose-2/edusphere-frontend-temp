@@ -9,11 +9,11 @@ import {
 } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/contexts/AuthContext';
-import { notificationService } from '@/services/notification.service';
-import type { Notification } from '@/types/compliance.types';
+import apiClient from '@/api/client';
+import type { INotification } from '@/types/complianceTypes';
 
 interface NotificationContextValue {
-  notifications: Notification[];
+  notifications: INotification[];
   unreadCount: number;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
@@ -22,22 +22,19 @@ interface NotificationContextValue {
 
 const NotificationContext = createContext<NotificationContextValue | undefined>(undefined);
 
-// Poll every 5 seconds as a reliable fallback
 const POLL_INTERVAL_MS = 5000;
 
-export function NotificationProvider({ children }: { children: ReactNode }) {
+const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const { user, isAuthenticated } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<INotification[]>([]);
   const knownIds = useRef<Set<string>>(new Set());
   const initialized = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Central dedup + state update used by both SSE and polling
-  const mergeNotifications = useCallback((incoming: Notification[]) => {
+  const mergeNotifications = useCallback((incoming: INotification[]) => {
     const newOnes = incoming.filter((n) => !knownIds.current.has(n.id));
     if (newOnes.length === 0) return;
 
-    // Only toast for notifications that arrive after initial load
     if (initialized.current) {
       newOnes.forEach((n) => toast.info(n.message, { autoClose: 5000 }));
     }
@@ -53,17 +50,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
     try {
-      const incoming = await notificationService.getByUser(user.id);
+      const incoming = await apiClient.get<INotification[]>(`/notifications/${user.id}`).then(r => r.data);
       mergeNotifications(incoming);
-      // Also sync full list to keep state in order with server
       setNotifications(incoming);
       knownIds.current = new Set(incoming.map((n) => n.id));
     } catch (err: unknown) {
-      const status =
-        err &&
-        typeof err === 'object' &&
-        'response' in err &&
-        (err as { response?: { status?: number } }).response?.status;
+      const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 500 || status === 404) {
         setNotifications([]);
         knownIds.current = new Set();
@@ -73,7 +65,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   }, [user, mergeNotifications]);
 
-  // SSE connection — best-effort live delivery on top of polling
+  // SSE best-effort live delivery — polling is the reliable fallback
   const connectSSE = useCallback((userId: string, signal: AbortSignal) => {
     const token = localStorage.getItem('accessToken');
 
@@ -103,7 +95,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             const raw = line.slice(5).trim();
             if (!raw || raw === 'ping') continue;
             try {
-              const n: Notification = JSON.parse(raw);
+              const n: INotification = JSON.parse(raw);
               if (knownIds.current.has(n.id)) continue;
               knownIds.current.add(n.id);
               if (initialized.current) {
@@ -111,12 +103,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
               }
               setNotifications((prev) => [n, ...prev]);
             } catch {
-              // malformed line — skip
+              // malformed SSE line
             }
           }
         }
       } catch {
-        // AbortError on cleanup, or SSE failed — polling covers it
+        // AbortError on cleanup or SSE failed — polling covers it
       }
     })();
   }, []);
@@ -127,19 +119,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     knownIds.current = new Set();
     initialized.current = false;
 
-    // Initial load (no toasts — establishes baseline)
     fetchNotifications();
 
-    // SSE for live delivery
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     connectSSE(user.id, ctrl.signal);
 
-    // Polling fallback — catches anything SSE misses
     const pollId = setInterval(async () => {
       if (!user) return;
       try {
-        const incoming = await notificationService.getByUser(user.id);
+        const incoming = await apiClient.get<INotification[]>(`/notifications/${user.id}`).then(r => r.data);
         const newOnes = incoming.filter((n) => !knownIds.current.has(n.id));
         if (newOnes.length > 0) {
           newOnes.forEach((n) => {
@@ -165,10 +154,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const markAsRead = async (id: string) => {
     try {
-      await notificationService.markAsRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-      );
+      await apiClient.patch(`/notifications/${id}/read`);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
     } catch {
       // ignore
     }
@@ -177,7 +164,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const markAllAsRead = async () => {
     if (!user) return;
     try {
-      await notificationService.markAllAsRead(user.id);
+      await apiClient.patch(`/notifications/${user.id}/read-all`);
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     } catch {
       // ignore
@@ -185,16 +172,17 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <NotificationContext.Provider
-      value={{ notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications }}
-    >
+    <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications }}>
       {children}
     </NotificationContext.Provider>
   );
-}
+};
 
-export function useNotifications() {
+// eslint-disable-next-line react-refresh/only-export-components
+const useNotifications = () => {
   const ctx = useContext(NotificationContext);
   if (!ctx) throw new Error('useNotifications must be used within NotificationProvider');
   return ctx;
-}
+};
+
+export { NotificationProvider, useNotifications };

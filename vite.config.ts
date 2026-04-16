@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -13,12 +12,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        // target: 'http://localhost:6061',
         target: 'http://localhost:8888',
         changeOrigin: true,
         secure: false,
-        // Required for SSE (Server-Sent Events) to work through the dev proxy.
-        // Without this, the proxy buffers the response and events are never forwarded.
         configure: (proxy) => {
           proxy.on('proxyRes', (proxyRes) => {
             if (proxyRes.headers['content-type']?.includes('text/event-stream')) {

@@ -1,17 +1,12 @@
 @import 'react-toastify/dist/ReactToastify.css';
 @import "tailwindcss";
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   TAILWIND v4 — dark variant bound to data-theme="dark"
-   (tailwind.config.js darkMode setting is v3-only and ignored)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 @variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   TAILWIND v4 THEME  (tailwind.config.js is v3-only — re-declare here)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 @theme inline {
-  /* ── Color palette: primary ── */
+  
   --color-primary-50:  #eff6ff;
   --color-primary-100: #dbeafe;
   --color-primary-200: #bfdbfe;
@@ -23,7 +18,7 @@
   --color-primary-800: #1e40af;
   --color-primary-900: #1e3a8a;
 
-  /* ── Color palette: secondary (slate) ── */
+  
   --color-secondary-50:  #f8fafc;
   --color-secondary-100: #f1f5f9;
   --color-secondary-200: #e2e8f0;
@@ -35,13 +30,13 @@
   --color-secondary-800: #1e293b;
   --color-secondary-900: #0f172a;
 
-  /* ── Semantic static colors ── */
+  
   --color-success: #16A34A;
   --color-warning: #D97706;
   --color-danger:  #DC2626;
   --color-info:    #0284C7;
 
-  /* ── Shadows ── */
+  
   --shadow-var-sm: var(--shadow);
   --shadow-var-lg: var(--shadow-lg);
   --shadow-sm:     0 1px 2px rgba(15,23,42,0.06), 0 3px 10px rgba(15,23,42,0.04);
@@ -49,33 +44,29 @@
   --shadow-lg:     0 6px 28px rgba(15,23,42,0.09), 0 2px 6px rgba(15,23,42,0.05);
   --shadow-xl:     0 10px 40px rgba(15,23,42,0.12);
 
-  /* ── Font family ── */
+  
   --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
 
-  /* ── Font sizes ── */
+  
   --text-xs:   10px;
   --text-sm:   12px;
   --text-lg:   16px;
   --text-xl:   18px;
 
-  /* ── Border radius ── */
+  
   --radius-sm:  4px;
   --radius:     6px;
   --radius-lg:  10px;
   --radius-xl:  12px;
 
-  /* ── Animations ── */
+  
   --animate-fadeIn: fadeIn 0.3s ease-in-out;
   --animate-slideIn: slideIn 0.3s ease-out;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   MISSING UTILITY CLASSES — CSS-variable-backed custom utilities
-   (classes used in JSX that Tailwind v4 cannot auto-generate
-    from tailwind.config.js because that file is v3-only)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 @layer utilities {
-  /* backgrounds */
+  
   .bg-surface  { background-color: var(--surface); }
   .bg-base     { background-color: var(--bg); }
   .bg-subtle   { background-color: var(--subtle); }
@@ -84,7 +75,7 @@
   .bg-bg-2     { background-color: var(--bg); }
   .bg-navy     { background-color: #0D1117; }
 
-  /* text colors */
+  
   .text-base      { color: var(--text); }
   .text-secondary { color: var(--text-2); }
   .text-tertiary  { color: var(--text-3); }
@@ -94,15 +85,15 @@
   .text-warning   { color: var(--warning); }
   .text-info      { color: var(--info); }
 
-  /* border colors */
+  
   .border-border { border-color: var(--border); }
   .border-light  { border-color: var(--border); }
 
-  /* box shadows */
+  
   .shadow-var-sm { box-shadow: var(--shadow); }
   .shadow-var-lg { box-shadow: var(--shadow-lg); }
 
-  /* opacity utilities used via slash syntax e.g. bg-success/10 */
+  
   .bg-success\/10 { background-color: rgb(22 163 74 / 0.1); }
   .bg-danger\/10  { background-color: rgb(220 38 38 / 0.1); }
   .bg-warning\/10 { background-color: rgb(217 119 6 / 0.1); }
@@ -110,7 +101,7 @@
 }
 
 :root {
-  /* Design Tokens - Light Mode */
+  
   --surface:   #FFFFFF;
   --bg:        #F1F5F9;
   --subtle:    #F8FAFC;
@@ -128,7 +119,7 @@
   --info:      #0284C7;
 }
 
-/* Dark Mode */
+
 [data-theme="dark"] {
   --surface:   #161B22;
   --bg:        #0D1117;
@@ -142,10 +133,7 @@
   --shadow:    0 1px 2px rgba(0,0,0,0.3), 0 3px 10px rgba(0,0,0,0.2);
   --shadow-lg: 0 6px 28px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3);
 
-  /* ── Bootstrap CSS variable overrides for dark mode ──────────
-     Bootstrap uses --bs-* variables for all its components.
-     We mirror our dark palette here so dropdowns, modals,
-     tables, and cards automatically inherit dark colours.       */
+  
   color-scheme: dark;
 
   --bs-body-bg:              #0D1117;
@@ -165,15 +153,15 @@
   --bs-tertiary-bg:          #1C2128;
   --bs-tertiary-bg-rgb:      28, 33, 40;
 
-  /* Links */
+  
   --bs-link-color:           #58A6FF;
   --bs-link-color-rgb:       88, 166, 255;
   --bs-link-hover-color:     #79C0FF;
 
-  /* Headings */
+  
   --bs-heading-color:        #E6EDF3;
 
-  /* Components */
+  
   --bs-card-bg:              #161B22;
   --bs-card-border-color:    #30363D;
   --bs-card-cap-bg:          #1C2128;
@@ -231,27 +219,22 @@
   --bs-btn-close-hover-opacity: 0.85;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BOOTSTRAP + TAILWIND COMPATIBILITY
-   Tailwind preflight resets some Bootstrap elements — restore them
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
-/* Bootstrap modal backdrop */
+
 .modal-backdrop { z-index: 1040; }
 
-/* Restore Bootstrap table styles overridden by Tailwind preflight */
+
 .table > :not(caption) > * > * {
   padding: 0.5rem 1rem;
   background-color: var(--bs-table-bg, transparent);
   border-bottom-width: 1px;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BASE
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -290,9 +273,7 @@
   }
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   SIDEBAR  (always dark — never themed)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .sidebar {
   position: fixed;
   top: 0;
@@ -435,9 +416,7 @@
   letter-spacing: 0.2px;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   TOPBAR
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .topbar {
   position: sticky;
   top: 0;
@@ -494,18 +473,14 @@
   border-color: rgba(22,163,74,0.25);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   LAYOUT
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .page-content {
   min-height: 100vh;
   padding: 2rem;
   background: var(--bg);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   PAGE HEADER
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -526,9 +501,7 @@
   color: var(--text-2);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   CARDS
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -568,9 +541,7 @@
   border-color: var(--blue);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   TABLES
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .table-wrap {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -660,7 +631,7 @@
   color: var(--text-2);
 }
 
-/* Skeleton loader */
+
 @keyframes shimmer {
   0%   { background-position: -600px 0; }
   100% { background-position: 600px 0; }
@@ -675,9 +646,7 @@
   animation: shimmer 1.4s ease infinite;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   FORMS
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .form-control,
 .form-select {
   width: 100%;
@@ -712,9 +681,7 @@
   color: var(--text-2);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BUTTONS
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -757,9 +724,7 @@
   cursor: not-allowed;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BADGES
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -786,9 +751,7 @@
 [data-theme="dark"] .badge-status-secondary { background: rgba(71 85 105 / 0.4); color: rgb(148 163 184); border-color: rgba(51 65 85 / 0.4); }
 [data-theme="dark"] .badge-status-primary   { background: rgba(55 48 163 / 0.2); color: rgb(147 197 253); border-color: rgba(55 48 163 / 0.4); }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   MODALS
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .modal-content {
   border-radius: 1rem;
   box-shadow: var(--shadow-lg);
@@ -834,9 +797,7 @@
   opacity: 0.9;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   DROPDOWNS
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .dropdown-menu {
   border-radius: 0.5rem;
   box-shadow: var(--shadow-lg);
@@ -871,9 +832,7 @@
   border-color: var(--border);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   WELCOME BANNER (dashboard)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .welcome-banner {
   border-radius: 0.75rem;
   padding: 2rem;
@@ -906,9 +865,7 @@
   pointer-events: none;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   EMPTY STATE
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -934,9 +891,7 @@
   color: var(--text-3);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   AUTH PAGES
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .auth-page {
   min-height: 100vh;
   display: flex;
@@ -992,9 +947,7 @@
   border-color: var(--border);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   TOASTS
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .Toastify__toast {
   border-radius: 0.5rem;
   border: 1px solid;
@@ -1015,13 +968,47 @@
   color: var(--text-2) !important;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   MISC
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .spinner-border {
   border-color: rgb(59 130 246);
 }
 
 .text-muted {
   color: var(--text-3);
+}
+
+
+.date-input-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+
+.date-input-native {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  z-index: 1;
+}
+
+
+.date-input-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.date-input-icon {
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.date-input-wrapper:focus-within .date-input-display {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-dim);
 }

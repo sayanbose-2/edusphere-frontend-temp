@@ -7,7 +7,7 @@ import { formatEnum } from '@/utils/formatters';
 
 interface Props { collapsed: boolean; }
 
-export function Sidebar({ collapsed }: Props) {
+const Sidebar = ({ collapsed }: Props) => {
   const { user, logout } = useAuth();
   const menu = user ? getMenuForRole(user.roles) : [];
 
@@ -85,6 +85,7 @@ export function Sidebar({ collapsed }: Props) {
       </div>
     </aside>
   );
-}
+};
 
+export { Sidebar };
 export default Sidebar;

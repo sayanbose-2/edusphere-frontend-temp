@@ -72,16 +72,11 @@ export enum ComplianceEntityType {
 }
 
 export enum ComplianceResult {
-  // COMPLIANT = 'COMPLIANT',
-  // NON_COMPLIANT = 'NON_COMPLIANT',
-  // PARTIALLY_COMPLIANT = 'PARTIALLY_COMPLIANT',
-  // UNDER_REVIEW = 'UNDER_REVIEW',
-  // EXEMPTED = 'EXEMPTED',
-    PASS = "PASS",
-    FAIL = "FAIL",
-    PENDING = "PENDING",
-    DEFERRED = "DEFERRED",
-    NOT_APPLICABLE = "NOT_APPLICABLE"
+  PASS = "PASS",
+  FAIL = "FAIL",
+  PENDING = "PENDING",
+  DEFERRED = "DEFERRED",
+  NOT_APPLICABLE = "NOT_APPLICABLE"
 }
 
 export enum DocumentType {
