@@ -6,11 +6,11 @@ import {
   useCallback,
   useRef,
   type ReactNode,
-} from 'react';
-import { toast } from 'react-toastify';
-import { useAuth } from '@/contexts/AuthContext';
-import apiClient from '@/api/client';
-import type { INotification } from '@/types/complianceTypes';
+} from "react";
+import { toast } from "react-toastify";
+import { useAuth } from "@/contexts/AuthContext";
+import apiClient from "@/api/client";
+import type { INotification } from "@/types/complianceTypes";
 
 interface NotificationContextValue {
   notifications: INotification[];
@@ -20,7 +20,9 @@ interface NotificationContextValue {
   fetchNotifications: () => Promise<void>;
 }
 
-const NotificationContext = createContext<NotificationContextValue | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextValue | undefined>(
+  undefined,
+);
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -50,12 +52,15 @@ const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
     try {
-      const incoming = await apiClient.get<INotification[]>(`/notifications/${user.id}`).then(r => r.data);
+      const incoming = await apiClient
+        .get<INotification[]>(`/notifications/${user.id}`)
+        .then((r) => r.data);
       mergeNotifications(incoming);
       setNotifications(incoming);
       knownIds.current = new Set(incoming.map((n) => n.id));
     } catch (err: unknown) {
-      const status = (err as { response?: { status?: number } })?.response?.status;
+      const status = (err as { response?: { status?: number } })?.response
+        ?.status;
       if (status === 500 || status === 404) {
         setNotifications([]);
         knownIds.current = new Set();
@@ -67,7 +72,7 @@ const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
   // SSE best-effort live delivery — polling is the reliable fallback
   const connectSSE = useCallback((userId: string, signal: AbortSignal) => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
 
     (async () => {
       try {
@@ -80,20 +85,20 @@ const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
-        let buffer = '';
+        let buffer = "";
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
           buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() ?? '';
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
 
           for (const line of lines) {
-            if (!line.startsWith('data:')) continue;
+            if (!line.startsWith("data:")) continue;
             const raw = line.slice(5).trim();
-            if (!raw || raw === 'ping') continue;
+            if (!raw || raw === "ping") continue;
             try {
               const n: INotification = JSON.parse(raw);
               if (knownIds.current.has(n.id)) continue;
@@ -128,7 +133,9 @@ const NotificationProvider = ({ children }: { children: ReactNode }) => {
     const pollId = setInterval(async () => {
       if (!user) return;
       try {
-        const incoming = await apiClient.get<INotification[]>(`/notifications/${user.id}`).then(r => r.data);
+        const incoming = await apiClient
+          .get<INotification[]>(`/notifications/${user.id}`)
+          .then((r) => r.data);
         const newOnes = incoming.filter((n) => !knownIds.current.has(n.id));
         if (newOnes.length > 0) {
           newOnes.forEach((n) => {
@@ -155,7 +162,9 @@ const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const markAsRead = async (id: string) => {
     try {
       await apiClient.patch(`/notifications/${id}/read`);
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+      );
     } catch {
       // ignore
     }
@@ -172,7 +181,15 @@ const NotificationProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications }}>
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        unreadCount,
+        markAsRead,
+        markAllAsRead,
+        fetchNotifications,
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );
@@ -181,7 +198,10 @@ const NotificationProvider = ({ children }: { children: ReactNode }) => {
 // eslint-disable-next-line react-refresh/only-export-components
 const useNotifications = () => {
   const ctx = useContext(NotificationContext);
-  if (!ctx) throw new Error('useNotifications must be used within NotificationProvider');
+  if (!ctx)
+    throw new Error(
+      "useNotifications must be used within NotificationProvider",
+    );
   return ctx;
 };
 

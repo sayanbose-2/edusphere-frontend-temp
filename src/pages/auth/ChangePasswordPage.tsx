@@ -1,49 +1,103 @@
-import { useState } from 'react';
-import { toast } from 'react-toastify';
-import apiClient from '@/api/client';
-import { PageHeader } from '@/components/common/PageHeader';
+import { toast } from "react-toastify";
+import apiClient from "@/api/client";
+import { PageHeader } from "@/components/common/PageHeader";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  ZodChangePasswordFormSchema,
+  type IChangePasswordFullForm,
+} from "@/zod/auth/ZodAuthSchema";
+
+type TForm = IChangePasswordFullForm;
 
 const ChangePasswordPage = () => {
-  const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  const [loading, setLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<TForm>({
+    resolver: zodResolver(ZodChangePasswordFormSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (form.newPassword !== form.confirmPassword) { toast.error('Passwords do not match'); return; }
-    if (form.newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return; }
-    setLoading(true);
+  const onSubmit = async (data: TForm) => {
     try {
-      await apiClient.post('/auth/change-password', { currentPassword: form.currentPassword, newPassword: form.newPassword });
-      toast.success('Password changed successfully');
-      setForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      await apiClient.post("/auth/change-password", {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
+      toast.success("Password changed successfully");
+      reset();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to change password';
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Failed to change password";
       toast.error(msg);
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
     <>
-      <PageHeader title="Change Password" subtitle="Update your account password" />
+      <PageHeader
+        title="Change Password"
+        subtitle="Update your account password"
+      />
       <div className="bg-surface border border-border rounded-lg p-7 max-w-md shadow-var-sm">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <label className="form-label">Current Password</label>
-            <input type="password" className="form-control" value={form.currentPassword} onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))} required />
+            <input
+              type="password"
+              className="form-control"
+              {...register("currentPassword")}
+            />
+            {errors.currentPassword && (
+              <p className="text-xs text-danger mt-1">
+                {errors.currentPassword.message}
+              </p>
+            )}
           </div>
           <div className="mb-4">
             <label className="form-label">New Password</label>
-            <input type="password" minLength={8} className="form-control" value={form.newPassword} onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))} placeholder="Min. 8 characters" required />
+            <input
+              type="password"
+              className="form-control"
+              {...register("newPassword")}
+              placeholder="Min. 8 characters"
+            />
+            {errors.newPassword && (
+              <p className="text-xs text-danger mt-1">
+                {errors.newPassword.message}
+              </p>
+            )}
           </div>
           <div className="mb-6">
             <label className="form-label">Confirm New Password</label>
-            <input type="password" className="form-control" value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} required />
+            <input
+              type="password"
+              className="form-control"
+              {...register("confirmPassword")}
+            />
+            {errors.confirmPassword && (
+              <p className="text-xs text-danger mt-1">
+                {errors.confirmPassword.message}
+              </p>
+            )}
           </div>
-          <button type="submit" className="btn btn-primary font-semibold py-2 px-5" disabled={loading}>
-            {loading && <span className="spinner-border spinner-border-sm me-2" />}
-            {loading ? 'Updating…' : 'Update Password'}
+          <button
+            type="submit"
+            className="btn btn-primary font-semibold py-2 px-5"
+            disabled={isSubmitting}
+          >
+            {isSubmitting && (
+              <span className="spinner-border spinner-border-sm me-2" />
+            )}
+            {isSubmitting ? "Updating…" : "Update Password"}
           </button>
         </form>
       </div>

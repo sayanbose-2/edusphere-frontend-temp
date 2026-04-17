@@ -1,17 +1,17 @@
-import type { IJwtPayload } from '@/types/authTypes';
+import type { IJwtPayload } from "@/types/authTypes";
 
 const decodeJwt = (token: string): IJwtPayload => {
-  const parts = token.split('.');
+  const parts = token.split(".");
   if (parts.length !== 3 || !parts[1]) {
-    throw new Error('Invalid JWT token format');
+    throw new Error("Invalid JWT token format");
   }
   const base64Url = parts[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
   const jsonPayload = decodeURIComponent(
     atob(base64)
-      .split('')
-      .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-      .join('')
+      .split("")
+      .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+      .join(""),
   );
   return JSON.parse(jsonPayload);
 };

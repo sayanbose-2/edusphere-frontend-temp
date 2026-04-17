@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
-import { Sidebar } from './Sidebar';
-import { TopNavbar } from './TopNavbar';
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
+import { Sidebar } from "./Sidebar";
+import { TopNavbar } from "./TopNavbar";
 
 const AppLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -9,8 +9,10 @@ const AppLayout = () => {
   return (
     <div className="flex min-h-screen">
       <Sidebar collapsed={collapsed} />
-      <div className={`flex flex-col flex-1 transition-all duration-200 ${collapsed ? 'ml-14' : 'ml-[252px]'}`}>
-        <TopNavbar onToggleSidebar={() => setCollapsed(c => !c)} />
+      <div
+        className={`flex flex-col flex-1 transition-all duration-200 ${collapsed ? "ml-14" : "ml-[252px]"}`}
+      >
+        <TopNavbar onToggleSidebar={() => setCollapsed((c) => !c)} />
         <main className="page-content">
           <Outlet />
         </main>

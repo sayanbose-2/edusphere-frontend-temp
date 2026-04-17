@@ -1,4 +1,4 @@
-import { Role } from '@/types/enums';
+import { Role } from "@/types/enums";
 
 export interface ILoginRequest {
   email: string;

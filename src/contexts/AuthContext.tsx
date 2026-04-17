@@ -1,9 +1,13 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
-import { decodeJwt, isTokenExpired } from '@/lib/jwt';
-import { TOKEN_KEYS } from '@/lib/constants';
-import apiClient from '@/api/client';
-import { Role } from '@/types/enums';
-import type { IAuthUser, ILoginRequest, IRegisterRequest } from '@/types/authTypes';
+import { createContext, useContext, useState, type ReactNode } from "react";
+import { decodeJwt, isTokenExpired } from "@/lib/jwt";
+import { TOKEN_KEYS } from "@/lib/constants";
+import apiClient from "@/api/client";
+import { Role } from "@/types/enums";
+import type {
+  IAuthUser,
+  ILoginRequest,
+  IRegisterRequest,
+} from "@/types/authTypes";
 
 interface AuthContextValue {
   user: IAuthUser | null;
@@ -27,7 +31,11 @@ const initUser = (): IAuthUser | null => {
       return null;
     }
     const decoded = decodeJwt(token);
-    return { id: decoded.userId, name: decoded.name, roles: decoded.roles as Role[] };
+    return {
+      id: decoded.userId,
+      name: decoded.name,
+      roles: decoded.roles as Role[],
+    };
   } catch {
     localStorage.clear();
     return null;
@@ -38,7 +46,9 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<IAuthUser | null>(initUser);
 
   const login = async (data: ILoginRequest): Promise<Role[]> => {
-    const { accessToken, refreshToken } = await apiClient.post<{ accessToken: string; refreshToken: string }>('/auth/login', data).then(r => r.data);
+    const { accessToken, refreshToken } = await apiClient
+      .post<{ accessToken: string; refreshToken: string }>("/auth/login", data)
+      .then((r) => r.data);
     localStorage.setItem(TOKEN_KEYS.ACCESS, accessToken);
     localStorage.setItem(TOKEN_KEYS.REFRESH, refreshToken);
     const decoded = decodeJwt(accessToken);
@@ -48,7 +58,12 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const register = async (data: IRegisterRequest): Promise<Role[]> => {
-    const { accessToken, refreshToken } = await apiClient.post<{ accessToken: string; refreshToken: string }>('/auth/register', data).then(r => r.data);
+    const { accessToken, refreshToken } = await apiClient
+      .post<{
+        accessToken: string;
+        refreshToken: string;
+      }>("/auth/register", data)
+      .then((r) => r.data);
     localStorage.setItem(TOKEN_KEYS.ACCESS, accessToken);
     localStorage.setItem(TOKEN_KEYS.REFRESH, refreshToken);
     const decoded = decodeJwt(accessToken);
@@ -58,16 +73,30 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    try { await apiClient.post('/auth/logout'); } catch { /* ignore */ }
+    try {
+      await apiClient.post("/auth/logout");
+    } catch {
+      /* ignore */
+    }
     localStorage.removeItem(TOKEN_KEYS.ACCESS);
     localStorage.removeItem(TOKEN_KEYS.REFRESH);
     setUser(null);
   };
 
-  const hasRole = (...roles: Role[]) => !!user && roles.some(r => user.roles.includes(r));
+  const hasRole = (...roles: Role[]) =>
+    !!user && roles.some((r) => user.roles.includes(r));
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user, hasRole }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        register,
+        logout,
+        isAuthenticated: !!user,
+        hasRole,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -76,7 +105,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 // eslint-disable-next-line react-refresh/only-export-components
 const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 };
 

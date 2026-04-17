@@ -1,4 +1,12 @@
-import { Status, ExamType, GradeStatus, ProjectStatus, ThesisStatus, DocumentType, Role } from '@/types/enums';
+import {
+  Status,
+  ExamType,
+  GradeStatus,
+  ProjectStatus,
+  ThesisStatus,
+  DocumentType,
+  Role,
+} from "@/types/enums";
 
 export interface IPageResponse<T> {
   content: T[];
@@ -39,19 +47,6 @@ export interface IStudent extends IBaseEntity {
   status: Status;
 }
 
-export interface ICreateStudentRequest {
-  userId: string;
-  dob: string;
-  gender: string;
-  address: string;
-}
-
-export interface IStudentSelfCreateRequest {
-  dob: string;
-  gender: string;
-  address: string;
-}
-
 export interface IFaculty extends IBaseEntity {
   userId: string;
   name: string;
@@ -62,17 +57,6 @@ export interface IFaculty extends IBaseEntity {
   position: string;
   joinDate: string;
   status: Status;
-}
-
-export interface ICreateFacultyRequest {
-  userId: string;
-  position: string;
-  departmentId: string;
-  status: Status;
-}
-
-export interface IFacultySelfCreateRequest {
-  position?: string;
 }
 
 export interface IDepartment {
@@ -87,13 +71,6 @@ export interface IDepartment {
   updatedAt: string;
 }
 
-export interface ICreateDepartmentRequest {
-  departmentName: string;
-  departmentCode: string;
-  contactInfo: string;
-  status: Status;
-}
-
 export interface ICourse {
   id: string;
   title: string;
@@ -104,27 +81,12 @@ export interface ICourse {
   status: Status;
 }
 
-export interface ICreateCourseRequest {
-  title: string;
-  departmentId: string;
-  credits: number;
-  duration: number;
-  status?: Status;
-}
-
 export interface ICurriculum {
   id: string;
   courseId: string;
   description: string;
   modulesJSON: string;
   status: Status;
-}
-
-export interface ICreateCurriculumRequest {
-  courseId: string;
-  description: string;
-  modulesJSON: string;
-  status?: Status;
 }
 
 export interface IExam {
@@ -135,13 +97,6 @@ export interface IExam {
   status: Status;
   createdAt?: string;
   updatedAt?: string;
-}
-
-export interface ICreateExamRequest {
-  courseId: string;
-  type: ExamType;
-  date: string;
-  status?: Status;
 }
 
 export interface IGrade {
@@ -155,24 +110,8 @@ export interface IGrade {
   updatedAt?: string;
 }
 
-export interface ICreateGradeRequest {
-  examId: string;
-  studentId: string;
-  score: number;
-  grade: string;
-  status: GradeStatus;
-}
-
 export interface IWorkload {
   id?: string;
-  facultyId: string;
-  courseId: string;
-  hours: number;
-  semester: string;
-  status: Status;
-}
-
-export interface ICreateWorkloadRequest {
   facultyId: string;
   courseId: string;
   hours: number;
@@ -191,16 +130,6 @@ export interface IResearchProject {
   studentsList: string[];
 }
 
-export interface ICreateResearchProjectRequest {
-  title: string;
-  facultyId: string;
-  facultyMembers: string[];
-  students: string[];
-  startDate: string;
-  endDate: string;
-  status: ProjectStatus;
-}
-
 export interface IThesis {
   id?: string;
   studentId: string;
@@ -208,14 +137,6 @@ export interface IThesis {
   supervisorId: string;
   submissionDate: string;
   status: ThesisStatus;
-}
-
-export interface ICreateThesisRequest {
-  studentId?: string;
-  title: string;
-  supervisorId: string;
-  submissionDate: string;
-  status?: ThesisStatus;
 }
 
 export interface IStudentDocument {

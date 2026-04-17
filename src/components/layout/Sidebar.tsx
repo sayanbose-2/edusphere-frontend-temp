@@ -1,35 +1,47 @@
-import { NavLink } from 'react-router-dom';
-import { BsBoxArrowRight, BsMortarboardFill } from 'react-icons/bs';
-import * as Icons from 'react-icons/bs';
-import { useAuth } from '@/contexts/AuthContext';
-import { getMenuForRole } from '@/utils/sidebarMenu';
-import { formatEnum } from '@/utils/formatters';
+import { NavLink } from "react-router-dom";
+import { BsBoxArrowRight, BsMortarboardFill } from "react-icons/bs";
+import * as Icons from "react-icons/bs";
+import { useAuth } from "@/contexts/AuthContext";
+import { getMenuForRole } from "@/utils/sidebarMenu";
+import { formatEnum } from "@/utils/formatters";
 
-interface Props { collapsed: boolean; }
+interface Props {
+  collapsed: boolean;
+}
 
 const Sidebar = ({ collapsed }: Props) => {
   const { user, logout } = useAuth();
   const menu = user ? getMenuForRole(user.roles) : [];
 
   const icon = (name: string) => {
-    const I = (Icons as Record<string, React.ComponentType<{ size?: number }>>)[name];
+    const I = (Icons as Record<string, React.ComponentType<{ size?: number }>>)[
+      name
+    ];
     return I ? <I size={14} /> : null;
   };
 
-  const initials = (user?.name ?? '?')
-    .split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  const initials = (user?.name ?? "?")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
-  const roleLabel = user?.roles[0] ? formatEnum(user.roles[0]) : '';
+  const roleLabel = user?.roles[0] ? formatEnum(user.roles[0]) : "";
 
   const items: React.ReactNode[] = [];
-  let lastSection = '__none__';
+  let lastSection = "__none__";
 
   menu.forEach((item, i) => {
     if (!collapsed && item.section && item.section !== lastSection) {
-      items.push(<div key={`sec-${i}`} className="sidebar-section">{item.section}</div>);
+      items.push(
+        <div key={`sec-${i}`} className="sidebar-section">
+          {item.section}
+        </div>,
+      );
       lastSection = item.section;
     } else if (!item.section) {
-      lastSection = '__none__';
+      lastSection = "__none__";
     }
 
     items.push(
@@ -37,20 +49,20 @@ const Sidebar = ({ collapsed }: Props) => {
         key={item.path}
         to={item.path}
         title={collapsed ? item.label : undefined}
-        className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
+        className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}
       >
         <span className="flex-shrink-0">{icon(item.icon)}</span>
         {!collapsed && <span>{item.label}</span>}
-      </NavLink>
+      </NavLink>,
     );
   });
 
   return (
     <aside
-      className={`sidebar transition-[width] duration-200 ease-in-out ${collapsed ? 'w-14' : 'w-[252px]'}`}
+      className={`sidebar transition-[width] duration-200 ease-in-out ${collapsed ? "w-14" : "w-[252px]"}`}
     >
       {/* Header */}
-      <div className={`sidebar-header ${collapsed ? 'justify-center' : ''}`}>
+      <div className={`sidebar-header ${collapsed ? "justify-center" : ""}`}>
         <div className="sidebar-logo">
           <BsMortarboardFill size={17} color="#fff" />
         </div>
@@ -77,7 +89,7 @@ const Sidebar = ({ collapsed }: Props) => {
         )}
         <button
           onClick={logout}
-          className={`sidebar-link ${collapsed ? 'justify-center' : ''}`}
+          className={`sidebar-link ${collapsed ? "justify-center" : ""}`}
         >
           <BsBoxArrowRight size={14} className="flex-shrink-0" />
           {!collapsed && <span>Sign out</span>}

@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
-import { Table } from 'react-bootstrap';
-import { BsSearch, BsInbox } from 'react-icons/bs';
-import type { ReactNode } from 'react';
+import { useState, useMemo } from "react";
+import { Table } from "react-bootstrap";
+import { BsSearch, BsInbox } from "react-icons/bs";
+import type { ReactNode } from "react";
 
 export interface Column<T> {
   key: string;
@@ -20,17 +20,25 @@ interface Props<T> {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rowKey = (item: any, i: number): string => {
-  return item.id ?? item.auditId ?? item.notificationId ?? item.studentDocumentId ?? String(i);
+  return (
+    item.id ??
+    item.auditId ??
+    item.notificationId ??
+    item.studentDocumentId ??
+    String(i)
+  );
 };
 
 const SkeletonRows = ({ cols }: { cols: number }) => {
   return (
     <>
-      {[1, 2, 3, 4, 5].map(i => (
+      {[1, 2, 3, 4, 5].map((i) => (
         <tr key={i}>
           {Array.from({ length: cols }).map((_, j) => (
             <td key={j} className="px-4 py-3.5">
-              <span className={`skeleton block ${j === 0 ? 'w-3/5' : j % 2 === 0 ? 'w-4/5' : 'w-2/5'}`} />
+              <span
+                className={`skeleton block ${j === 0 ? "w-3/5" : j % 2 === 0 ? "w-4/5" : "w-2/5"}`}
+              />
             </td>
           ))}
         </tr>
@@ -39,15 +47,26 @@ const SkeletonRows = ({ cols }: { cols: number }) => {
   );
 };
 
-const DataTable = <T,>({ columns, data, loading, searchable = true, onRowClick, actions }: Props<T>) => {
-  const [search, setSearch] = useState('');
+const DataTable = <T,>({
+  columns,
+  data,
+  loading,
+  searchable = true,
+  onRowClick,
+  actions,
+}: Props<T>) => {
+  const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
     const safeData = Array.isArray(data) ? data : [];
     if (!search.trim()) return safeData;
     const q = search.toLowerCase();
-    return safeData.filter(item =>
-      columns.some(col => String((item as Record<string, unknown>)[col.key] ?? '').toLowerCase().includes(q))
+    return safeData.filter((item) =>
+      columns.some((col) =>
+        String((item as Record<string, unknown>)[col.key] ?? "")
+          .toLowerCase()
+          .includes(q),
+      ),
     );
   }, [data, columns, search]);
 
@@ -63,14 +82,16 @@ const DataTable = <T,>({ columns, data, loading, searchable = true, onRowClick, 
               className="datatable-search-input"
               placeholder="Search records…"
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               disabled={loading}
             />
           </div>
           <span className="text-xs text-tertiary whitespace-nowrap">
-            {loading ? 'Loading…' : search.trim() && filtered.length !== data.length
-              ? `${filtered.length} of ${data.length}`
-              : `${data.length} record${data.length !== 1 ? 's' : ''}`}
+            {loading
+              ? "Loading…"
+              : search.trim() && filtered.length !== data.length
+                ? `${filtered.length} of ${data.length}`
+                : `${data.length} record${data.length !== 1 ? "s" : ""}`}
           </span>
         </div>
       )}
@@ -78,7 +99,9 @@ const DataTable = <T,>({ columns, data, loading, searchable = true, onRowClick, 
       <Table hover responsive className="mb-0">
         <thead>
           <tr>
-            {columns.map(col => <th key={col.key}>{col.label}</th>)}
+            {columns.map((col) => (
+              <th key={col.key}>{col.label}</th>
+            ))}
             {actions && <th className="w-1">Actions</th>}
           </tr>
         </thead>
@@ -91,9 +114,11 @@ const DataTable = <T,>({ columns, data, loading, searchable = true, onRowClick, 
                 <div className="empty-state">
                   <BsInbox size={32} />
                   <p className="empty-state-title">
-                    {search ? 'No results found' : 'No records yet'}
+                    {search ? "No results found" : "No records yet"}
                   </p>
-                  {search && <p className="empty-state-sub">Try adjusting your search</p>}
+                  {search && (
+                    <p className="empty-state-sub">Try adjusting your search</p>
+                  )}
                 </div>
               </td>
             </tr>
@@ -102,14 +127,14 @@ const DataTable = <T,>({ columns, data, loading, searchable = true, onRowClick, 
               <tr
                 key={rowKey(item, i)}
                 onClick={() => onRowClick?.(item)}
-                className={onRowClick ? 'cursor-pointer' : ''}
+                className={onRowClick ? "cursor-pointer" : ""}
               >
-                {columns.map(col => (
+                {columns.map((col) => (
                   <td key={col.key}>
                     {col.render
                       ? col.render(item)
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      : String((item as any)[col.key] ?? '')}
+                      : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        String((item as any)[col.key] ?? "")}
                   </td>
                 ))}
                 {actions && (
